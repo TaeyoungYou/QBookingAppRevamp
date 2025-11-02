@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 const Footer = () => {
   return (
     <motion.footer
-      className="w-full  bg-linear-to-r from-utOrange to-selectiveYellow border-t border-white rounded-tr-full"
+      className="w-full  bg-linear-to-r from-utOrange to-selectiveYellow border-t border-white rounded-tr-full mt-10"
       whileInView={{
         opacity: [0, 1],
         x: ["-100%", "0%"],
