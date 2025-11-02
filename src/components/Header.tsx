@@ -80,7 +80,7 @@ const Header = () => {
                   className="text-prussianBlue font-inter text-center "
                   onClick={closeSidebar}
                 >
-                  About
+                  Services
                 </a>
               </div>
               <div className="w-full py-4  border-t border-gray-200 ">
@@ -89,7 +89,7 @@ const Header = () => {
                   className="text-prussianBlue font-inter text-center "
                   onClick={closeSidebar}
                 >
-                  Services
+                  About Us
                 </a>
               </div>
               <div className="w-full py-4 border-t border-gray-200">
@@ -107,7 +107,7 @@ const Header = () => {
                   className="text-prussianBlue font-inter text-center "
                   onClick={closeSidebar}
                 >
-                  About Us
+                  Appointment
                 </a>
               </div>
               <div className="w-full py-4 border-t border-gray-200">
@@ -116,7 +116,7 @@ const Header = () => {
                   className="text-prussianBlue font-inter text-center "
                   onClick={closeSidebar}
                 >
-                  Appointment
+                  Contact Us
                 </a>
               </div>
             </nav>
@@ -207,11 +207,11 @@ const Header = () => {
           {/* Desktop Navbar */}
           <section className="hidden md:flex gap-8 items-center ">
             <p className="text-prussianBlue/80 font-inter">Home</p>
-            <p className="text-prussianBlue/80 font-inter">About</p>
             <p className="text-prussianBlue/80 font-inter">Services</p>
-            <p className="text-prussianBlue/80 font-inter">Pricing</p>
             <p className="text-prussianBlue/80 font-inter">About Us</p>
+            <p className="text-prussianBlue/80 font-inter">Pricing</p>
             <p className="text-prussianBlue/80 font-inter">Appointment</p>
+            <p className="text-prussianBlue/80 font-inter">Contact Us</p>
           </section>
         </motion.div>
       </section>
