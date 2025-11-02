@@ -42,7 +42,7 @@ const Footer = () => {
           {/* Right Content */}
           <div>
             <h3 className="font-inter text-xl font-semibold text-prussianBlue mb-4">
-              Our Contact
+              Our Contacts
             </h3>{" "}
             {/* Contact Links */}
             <div className="space-y-2 mb-6">
