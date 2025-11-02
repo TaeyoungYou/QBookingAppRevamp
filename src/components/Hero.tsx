@@ -62,7 +62,7 @@ const Hero = () => {
         </div>
 
         {/* Wave Background */}
-        <div className="absolute bottom-0 left-0 w-full h-[100px] pointer-events-none hidden md:block ">
+        <div className="absolute bottom-0 left-0 w-full h-[50px] pointer-events-none hidden md:block ">
           <svg
             className="absolute bottom-0 w-full h-full"
             viewBox="0 0 1200 120"
