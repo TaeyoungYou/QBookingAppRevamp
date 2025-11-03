@@ -6,6 +6,18 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
+    if (isSidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isSidebarOpen]);
+
+  useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
       setIsScrolled(scrollTop > 50);
@@ -35,7 +47,7 @@ const Header = () => {
 
       {/* Mobile Sidebar */}
       <motion.div
-        className="fixed top-0 right-0 h-full w-80 bg-body z-50 "
+        className="md:hidden fixed top-0 right-0 h-full w-80 bg-body z-50 "
         initial={{ x: "100%" }}
         animate={{ x: isSidebarOpen ? "0" : "100%" }}
         transition={{ duration: 0.3, type: "spring", stiffness: 100 }}
