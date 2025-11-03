@@ -1,8 +1,19 @@
 import { AnimatedTestimonials } from "../../components/AnimatedTestimonials";
 import Header from "../../components/Header";
 import { motion } from "framer-motion";
-
+import { useState, useEffect } from "react";
+import Footer from "../../components/Footer";
 const AboutUs = () => {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      setIsScrolled(scrollTop > 50);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
   const testimonials = [
     {
       quote:
@@ -43,8 +54,12 @@ const AboutUs = () => {
         <div className="relative z-10 w-9/12 md:w-3/4 mx-auto">
           <motion.h1
             initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
+            animate={{
+              x: 0,
+              y: isScrolled ? "100%" : "0%",
+              opacity: isScrolled ? 0 : 1,
+            }}
+            transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
             className="font-inter text-4xl sm:text-5xl lg:text-6xl font-bold text-white"
           >
             About us
@@ -184,7 +199,7 @@ const AboutUs = () => {
       </section>
 
       {/* Team Section */}
-      <section className="w-full py-20 px-6 bg-body">
+      <section className="w-full  py-20 px-6 bg-body ">
         <div className="w-9/12 md:w-3/4 mx-auto">
           <div className="text-center mb-16">
             <motion.h2
@@ -200,10 +215,11 @@ const AboutUs = () => {
               Dedicated professionals driving our success
             </p>
 
-            <AnimatedTestimonials testimonials={testimonials} />
+            <AnimatedTestimonials testimonials={testimonials} autoplay={true} />
           </div>
         </div>
       </section>
+      <Footer />
     </section>
   );
 };

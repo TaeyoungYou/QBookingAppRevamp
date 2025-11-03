@@ -11,7 +11,7 @@ const Services = () => {
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
-      setIsScrolled(scrollTop > 100);
+      setIsScrolled(scrollTop > 50);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -55,14 +55,13 @@ const Services = () => {
         {/* Content */}
         <div className="relative z-10 w-9/12 md:w-3/4 mx-auto">
           <motion.h1
-            key={isScrolled ? "scrolled" : "not-scrolled"}
             initial={{ opacity: 0, x: -50 }}
             animate={{
               x: 0,
               y: isScrolled ? "100%" : "0%",
               opacity: isScrolled ? 0 : 1,
             }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
             className="font-inter text-4xl sm:text-5xl lg:text-6xl font-bold text-white"
           >
             Services

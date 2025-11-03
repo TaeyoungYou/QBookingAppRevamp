@@ -61,13 +61,13 @@ export const AnimatedTestimonials = ({
                     rotate: isActive(index) ? 0 : randomRotateY(),
                     zIndex: isActive(index)
                       ? 999
-                      : testimonials.length + 2 - index,
+                      : testimonials.length + 10 - index,
                     y: isActive(index) ? [0, -80, 0] : 0,
                   }}
                   exit={{
                     opacity: 0,
                     scale: 0.9,
-                    z: 100,
+                    z: -100,
                     rotate: randomRotateY(),
                   }}
                   transition={{
@@ -109,13 +109,13 @@ export const AnimatedTestimonials = ({
               ease: "easeInOut",
             }}
           >
-            <h3 className="text-2xl font-bold dark:text-white text-black">
+            <h3 className="text-2xl font-bold  text-prussianBlue">
               {testimonials[active].name}
             </h3>
-            <p className="text-sm text-gray-500 dark:text-neutral-500">
+            <p className="text-sm text-prussianBlue/50 ">
               {testimonials[active].designation}
             </p>
-            <motion.p className="text-lg text-gray-500 mt-8 dark:text-neutral-300">
+            <motion.p className="text-lg text-prussianBlue mt-8 ">
               {testimonials[active].quote.split(" ").map((word, index) => (
                 <motion.span
                   key={index}
@@ -133,6 +133,8 @@ export const AnimatedTestimonials = ({
                     duration: 0.2,
                     ease: "easeInOut",
                     delay: 0.02 * index,
+                    type: "spring",
+                    stiffness: 100,
                   }}
                   className="inline-block"
                 >
@@ -141,18 +143,18 @@ export const AnimatedTestimonials = ({
               ))}
             </motion.p>
           </motion.div>
-          <div className="flex gap-4 pt-12 md:pt-0">
+          <div className="flex justify-center items-center gap-4 pt-12 md:pt-0 ">
             <button
               onClick={handlePrev}
-              className="h-10 w-10 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center group/button"
+              className="h-10 w-10 rounded-full bg-prussianBlue/20  flex items-center justify-center group/button "
             >
-              <FaArrowLeft className="h-5 w-5 text-black dark:text-neutral-400 group-hover/button:rotate-12 transition-transform duration-300" />
+              <FaArrowLeft className="h-5 w-5 text-black  group-hover/button:rotate-12 transition-transform duration-300" />
             </button>
             <button
               onClick={handleNext}
-              className="h-10 w-10 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center group/button"
+              className="h-10 w-10 rounded-full bg-prussianBlue/20  flex items-center justify-center group/button "
             >
-              <FaArrowRight className="h-5 w-5 text-black dark:text-neutral-400 group-hover/button:-rotate-12 transition-transform duration-300" />
+              <FaArrowRight className="h-5 w-5 text-black  group-hover/button:-rotate-12 transition-transform duration-300" />
             </button>
           </div>
         </div>
@@ -160,3 +162,4 @@ export const AnimatedTestimonials = ({
     </div>
   );
 };
+export default AnimatedTestimonials;
