@@ -45,11 +45,9 @@ const Services = () => {
 
       {/* Hero Section with Background Image */}
       <section
-        className="w-full h-[30vh] flex items-center justify-start pt-28 bg-cover bg-center bg-no-repeat relative"
+        className="w-full h-[30vh] flex items-center justify-start pt-28 bg-cover bg-center bg-no-repeat relative bg-fixed"
         style={{
           backgroundImage: `url("https://images.unsplash.com/photo-1522273987129-4ca3c41871e2?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80")`,
-          backgroundSize: "cover",
-          backgroundPosition: "center center",
         }}
       >
         {/* Dark Overlay */}
