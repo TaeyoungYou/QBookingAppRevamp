@@ -1,8 +1,9 @@
-import AboutUs from "./pages/Landing/AboutUs";
+// import AboutUs from "./pages/Landing/AboutUs";
+import Pricing from "./pages/Landing/Pricing";
 const App = () => {
   return (
     <div className="bg-body ">
-      <AboutUs />
+      <Pricing />
     </div>
   );
 };

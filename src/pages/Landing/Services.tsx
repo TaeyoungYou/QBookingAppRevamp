@@ -45,7 +45,7 @@ const Services = () => {
 
       {/* Hero Section with Background Image */}
       <section
-        className="w-full h-[30vh] flex items-center justify-start pt-28 bg-cover bg-center bg-no-repeat relative bg-fixed"
+        className="w-full h-[30vh] flex items-center justify-start pt-28 bg-cover bg-center bg-no-repeat relative bg-fixed top-4"
         style={{
           backgroundImage: `url("https://images.unsplash.com/photo-1522273987129-4ca3c41871e2?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80")`,
         }}
@@ -62,7 +62,7 @@ const Services = () => {
               opacity: isScrolled ? 0 : 1,
             }}
             transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
-            className="font-inter text-4xl sm:text-5xl lg:text-6xl font-bold text-white"
+            className="font-inter text-4xl sm:text-5xl lg:text-6xl font-bold text-body"
           >
             Services
           </motion.h1>
