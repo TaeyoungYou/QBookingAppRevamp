@@ -5,6 +5,7 @@ const Header = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
+  // Scroll event listener
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
@@ -23,19 +24,34 @@ const Header = () => {
     setIsSidebarOpen(false);
   };
 
+  // Prevent body scroll when sidebar is open
+  useEffect(() => {
+    const isDesktop = window.matchMedia("(min-width: 768px)").matches;
+    if (isDesktop) {
+      document.body.style.overflow = "unset";
+    } else {
+      document.body.style.overflow = isSidebarOpen ? "hidden" : "unset";
+    }
+
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isSidebarOpen]);
+
   return (
     <>
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div
-          className="fixed z-20 inset-0  bg-black/40  md:hidden"
+          className="fixed z-20 inset-0 bg-black/60 backdrop-blur-sm md:hidden"
           onClick={closeSidebar}
         />
       )}
 
       {/* Mobile Sidebar */}
       <motion.div
-        className="fixed top-0 right-0 h-full w-80 bg-body z-50 "
+        className={`md:hidden fixed top-0 right-0 h-full w-80 bg-body z-50 
+        }`}
         initial={{ x: "100%" }}
         animate={{ x: isSidebarOpen ? "0" : "100%" }}
         transition={{ duration: 0.3, type: "spring", stiffness: 100 }}
