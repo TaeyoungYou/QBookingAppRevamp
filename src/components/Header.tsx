@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import logo from "../assets/logo.png";
+import { Link } from "react-router-dom";
 const Header = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -56,7 +57,7 @@ const Header = () => {
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div
-          className="fixed z-20 inset-0 bg-black/60 backdrop-blur-sm md:hidden"
+          className="fixed z-50 inset-0 bg-black/60 backdrop-blur-sm md:hidden"
           onClick={closeSidebar}
         />
       )}
@@ -94,58 +95,58 @@ const Header = () => {
             <nav className="flex flex-col gap-2 w-full ">
               <div className="w-full py-4 border-t border-gray-200">
                 {" "}
-                <a
-                  href="#"
+                <Link
+                  to="/"
                   className="text-prussianBlue font-inter text-center "
                   onClick={closeSidebar}
                 >
                   Home
-                </a>
+                </Link>
               </div>
               <div className="w-full py-4 border-t border-gray-200">
-                <a
-                  href="#"
+                <Link
+                  to="/services"
                   className="text-prussianBlue font-inter text-center "
                   onClick={closeSidebar}
                 >
                   Services
-                </a>
+                </Link>
               </div>
               <div className="w-full py-4  border-t border-gray-200 ">
-                <a
-                  href="#"
+                <Link
+                  to="/about-us"
                   className="text-prussianBlue font-inter text-center "
                   onClick={closeSidebar}
                 >
                   About Us
-                </a>
+                </Link>
               </div>
               <div className="w-full py-4 border-t border-gray-200">
-                <a
-                  href="#"
+                <Link
+                  to="/pricing"
                   className="text-prussianBlue font-inter text-center "
                   onClick={closeSidebar}
                 >
                   Pricing
-                </a>
+                </Link>
               </div>
               <div className="w-full py-4 border-t border-gray-200">
-                <a
-                  href="#"
+                <Link
+                  to="/appointment"
                   className="text-prussianBlue font-inter text-center "
                   onClick={closeSidebar}
                 >
                   Appointment
-                </a>
+                </Link>
               </div>
               <div className="w-full py-4 border-t border-gray-200">
-                <a
-                  href="#"
+                <Link
+                  to="/contact-us"
                   className="text-prussianBlue font-inter text-center "
                   onClick={closeSidebar}
                 >
                   Contact Us
-                </a>
+                </Link>
               </div>
             </nav>
             {/* Mobile Buttons */}
@@ -161,7 +162,7 @@ const Header = () => {
         </div>
       </motion.div>
 
-      <section className="w-full flex justify-center items-center border-b border-gray-100 shadow-sm fixed top-0 left-0 right-0 z-10  bg-body">
+      <section className="w-full flex justify-center items-center border-b border-gray-100 shadow-sm fixed top-0 left-0 right-0 z-1010  bg-body">
         {/* Header Container */}
         <motion.div
           className={`w-3/4 flex flex-col gap-8 transition-all duration-300 ${
@@ -234,12 +235,27 @@ const Header = () => {
           </motion.div>
           {/* Desktop Navbar */}
           <section className="hidden md:flex gap-8 items-center ">
-            <p className="text-prussianBlue/80 font-inter">Home</p>
-            <p className="text-prussianBlue/80 font-inter">Services</p>
-            <p className="text-prussianBlue/80 font-inter">About Us</p>
-            <p className="text-prussianBlue/80 font-inter">Pricing</p>
-            <p className="text-prussianBlue/80 font-inter">Appointment</p>
-            <p className="text-prussianBlue/80 font-inter">Contact Us</p>
+            <Link
+              to="/"
+              className="text-prussianBlue/80 font-inter active:text-skyBlue"
+            >
+              Home
+            </Link>
+            <Link to="/services" className="text-prussianBlue/80 font-inter">
+              Services
+            </Link>
+            <Link to="/about-us" className="text-prussianBlue/80 font-inter">
+              About Us
+            </Link>
+            <Link to="/pricing" className="text-prussianBlue/80 font-inter">
+              Pricing
+            </Link>
+            <Link to="/appointment" className="text-prussianBlue/80 font-inter">
+              Appointment
+            </Link>
+            <Link to="/contact-us" className="text-prussianBlue/80 font-inter">
+              Contact Us
+            </Link>
           </section>
         </motion.div>
       </section>
