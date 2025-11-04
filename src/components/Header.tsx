@@ -50,8 +50,7 @@ const Header = () => {
 
       {/* Mobile Sidebar */}
       <motion.div
-        className={`md:hidden fixed top-0 right-0 h-full w-80 bg-body z-50 
-        }`}
+        className="md:hidden fixed top-0 right-0 h-full w-80 bg-body z-50 "
         initial={{ x: "100%" }}
         animate={{ x: isSidebarOpen ? "0" : "100%" }}
         transition={{ duration: 0.3, type: "spring", stiffness: 100 }}
