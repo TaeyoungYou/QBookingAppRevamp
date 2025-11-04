@@ -57,14 +57,14 @@ const Header = () => {
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div
-          className="fixed z-50 inset-0 bg-black/60 backdrop-blur-sm md:hidden"
+          className="fixed z-1020 inset-0 bg-black/60 backdrop-blur-sm md:hidden"
           onClick={closeSidebar}
         />
       )}
 
       {/* Mobile Sidebar */}
       <motion.div
-        className="md:hidden fixed top-0 right-0 h-full w-80 bg-body z-50 "
+        className="md:hidden fixed top-0 right-0 h-full w-80 bg-body z-1020 "
         initial={{ x: "100%" }}
         animate={{ x: isSidebarOpen ? "0" : "100%" }}
         transition={{ duration: 0.3, type: "spring", stiffness: 100 }}
@@ -217,17 +217,17 @@ const Header = () => {
               aria-label="Toggle menu"
             >
               <span
-                className={`w-6 h-0.5 bg-gray-600 transition-all duration-300 ${
+                className={`w-6 h-0.5 bg-prussianBlue/60 transition-all duration-300 ${
                   isSidebarOpen ? "rotate-45 translate-y-1.5" : ""
                 }`}
               ></span>
               <span
-                className={`w-6 h-0.5 bg-gray-600 transition-opacity duration-300 ${
+                className={`w-6 h-0.5 bg-prussianBlue/60 transition-opacity duration-300 ${
                   isSidebarOpen ? "opacity-0" : ""
                 }`}
               ></span>
               <span
-                className={`w-6 h-0.5 bg-gray-600 transition-all duration-300 ${
+                className={`w-6 h-0.5 bg-prussianBlue/60 transition-all duration-300 ${
                   isSidebarOpen ? "-rotate-45 -translate-y-1.5" : ""
                 }`}
               ></span>
