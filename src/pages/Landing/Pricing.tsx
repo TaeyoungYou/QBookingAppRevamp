@@ -62,7 +62,7 @@ const Pricing = () => {
       </section>
 
       {/* Pricing Content */}
-      <section className="w-full py-20  bg-body">
+      <section className="w-full py-20  bg-body text-center">
         <div className="w-9/12 md:w-3/4 mx-auto">
           <motion.h1 className="text-3xl font-bold tracking-tight text-prussianBlue sm:text-4xl lg:text-5xl">
             Simple pricing for appointment scheduling
@@ -75,7 +75,7 @@ const Pricing = () => {
           <div className="w-full mt-8 flex items-center justify-center gap-4">
             <span
               className={`text-base ${
-                billing === "monthly" ? "text-blueGreen" : "text-prussianBlue"
+                billing === "monthly" ? "text-utOrange" : "text-prussianBlue"
               }`}
             >
               Monthly
@@ -86,7 +86,9 @@ const Pricing = () => {
               onClick={() =>
                 setBilling((b) => (b === "monthly" ? "yearly" : "monthly"))
               }
-              className="relative inline-flex h-8 w-14 items-center rounded-full bg-gray-200 transition-colors focus:outline-none"
+              className={`relative inline-flex h-8 w-14 items-center rounded-full bg-gray-200 transition-colors focus:outline-none ${
+                billing === "yearly" ? "bg-selectiveYellow" : ""
+              }`}
             >
               <span
                 className={`inline-block h-6 w-6 transform rounded-full bg-white shadow transition-transform ${
@@ -96,7 +98,7 @@ const Pricing = () => {
             </button>
             <span
               className={`text-base ${
-                billing === "yearly" ? "text-blueGreen" : "text-prussianBlue"
+                billing === "yearly" ? "text-utOrange" : "text-prussianBlue"
               }`}
             >
               Yearly{" "}

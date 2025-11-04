@@ -38,6 +38,19 @@ const Header = () => {
     };
   }, [isSidebarOpen]);
 
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const handleChange = () => {
+      if (mq.matches) {
+        document.body.style.overflow = "unset";
+      } else {
+        document.body.style.overflow = isSidebarOpen ? "hidden" : "unset";
+      }
+    };
+    handleChange();
+    mq.addEventListener("change", handleChange);
+    return () => mq.removeEventListener("change", handleChange);
+  }, [isSidebarOpen]);
   return (
     <>
       {/* Mobile Sidebar Overlay */}
