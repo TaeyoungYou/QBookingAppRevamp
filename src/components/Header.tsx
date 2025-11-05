@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import logo from "../assets/logo.png";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 const Header = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const location = useLocation();
 
   // Scroll event listener
   useEffect(() => {
@@ -97,7 +98,11 @@ const Header = () => {
                 {" "}
                 <Link
                   to="/"
-                  className="text-prussianBlue font-inter text-center "
+                  className={`font-inter text-center transition-colors ${
+                    location.pathname === "/"
+                      ? "text-skyBlue"
+                      : "text-prussianBlue"
+                  }`}
                   onClick={closeSidebar}
                 >
                   Home
@@ -106,7 +111,11 @@ const Header = () => {
               <div className="w-full py-4 border-t border-gray-200">
                 <Link
                   to="/services"
-                  className="text-prussianBlue font-inter text-center "
+                  className={`font-inter text-center transition-colors ${
+                    location.pathname === "/services"
+                      ? "text-skyBlue"
+                      : "text-prussianBlue"
+                  }`}
                   onClick={closeSidebar}
                 >
                   Services
@@ -115,7 +124,11 @@ const Header = () => {
               <div className="w-full py-4  border-t border-gray-200 ">
                 <Link
                   to="/about-us"
-                  className="text-prussianBlue font-inter text-center "
+                  className={`font-inter text-center transition-colors ${
+                    location.pathname === "/about-us"
+                      ? "text-skyBlue"
+                      : "text-prussianBlue"
+                  }`}
                   onClick={closeSidebar}
                 >
                   About Us
@@ -124,7 +137,11 @@ const Header = () => {
               <div className="w-full py-4 border-t border-gray-200">
                 <Link
                   to="/pricing"
-                  className="text-prussianBlue font-inter text-center "
+                  className={`font-inter text-center transition-colors ${
+                    location.pathname === "/pricing"
+                      ? "text-skyBlue"
+                      : "text-prussianBlue"
+                  }`}
                   onClick={closeSidebar}
                 >
                   Pricing
@@ -133,7 +150,11 @@ const Header = () => {
               <div className="w-full py-4 border-t border-gray-200">
                 <Link
                   to="/appointment"
-                  className="text-prussianBlue font-inter text-center "
+                  className={`font-inter text-center transition-colors ${
+                    location.pathname === "/appointment"
+                      ? "text-skyBlue"
+                      : "text-prussianBlue"
+                  }`}
                   onClick={closeSidebar}
                 >
                   Appointment
@@ -142,7 +163,11 @@ const Header = () => {
               <div className="w-full py-4 border-t border-gray-200">
                 <Link
                   to="/contact-us"
-                  className="text-prussianBlue font-inter text-center "
+                  className={`font-inter text-center transition-colors ${
+                    location.pathname === "/contact-us"
+                      ? "text-skyBlue"
+                      : "text-prussianBlue"
+                  }`}
                   onClick={closeSidebar}
                 >
                   Contact Us
@@ -154,9 +179,16 @@ const Header = () => {
               <button className="bg-gray-100 w-full py-2 rounded-full font-inter text-prussianBlue  transition-colors">
                 Sign In
               </button>
-              <button className="bg-skyBlue w-full py-2 rounded-full font-inter text-prussianBlue transition-colors">
+              <Link
+                to="/appointment"
+                className={`bg-skyBlue text-center w-full py-2 rounded-full font-inter text-prussianBlue transition-colors ${
+                  location.pathname === "/appointment"
+                    ? "text-skyBlue"
+                    : "text-prussianBlue"
+                }`}
+              >
                 Book Your Appointment
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -237,23 +269,62 @@ const Header = () => {
           <section className="hidden md:flex gap-8 items-center ">
             <Link
               to="/"
-              className="text-prussianBlue/80 font-inter active:text-skyBlue"
+              className={`font-inter transition-colors ${
+                location.pathname === "/"
+                  ? "text-skyBlue"
+                  : "text-prussianBlue/80"
+              }`}
             >
               Home
             </Link>
-            <Link to="/services" className="text-prussianBlue/80 font-inter">
+            <Link
+              to="/services"
+              className={`font-inter transition-colors ${
+                location.pathname === "/services"
+                  ? "text-skyBlue"
+                  : "text-prussianBlue/80"
+              }`}
+            >
               Services
             </Link>
-            <Link to="/about-us" className="text-prussianBlue/80 font-inter">
+            <Link
+              to="/about-us"
+              className={`font-inter transition-colors ${
+                location.pathname === "/about-us"
+                  ? "text-skyBlue"
+                  : "text-prussianBlue/80"
+              }`}
+            >
               About Us
             </Link>
-            <Link to="/pricing" className="text-prussianBlue/80 font-inter">
+            <Link
+              to="/pricing"
+              className={`font-inter transition-colors ${
+                location.pathname === "/pricing"
+                  ? "text-skyBlue"
+                  : "text-prussianBlue/80"
+              }`}
+            >
               Pricing
             </Link>
-            <Link to="/appointment" className="text-prussianBlue/80 font-inter">
+            <Link
+              to="/appointment"
+              className={`font-inter transition-colors ${
+                location.pathname === "/appointment"
+                  ? "text-skyBlue"
+                  : "text-prussianBlue/80"
+              }`}
+            >
               Appointment
             </Link>
-            <Link to="/contact-us" className="text-prussianBlue/80 font-inter">
+            <Link
+              to="/contact-us"
+              className={`font-inter transition-colors ${
+                location.pathname === "/contact-us"
+                  ? "text-skyBlue"
+                  : "text-prussianBlue/80"
+              }`}
+            >
               Contact Us
             </Link>
           </section>
