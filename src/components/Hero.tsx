@@ -6,8 +6,8 @@ const Hero = () => {
   return (
     <>
       {/* Hero Section */}
-      <section className="w-full min-h-[85vh] md:min-h-screen pt-28 md:pt-40 pb-0 relative overflow-hidden">
-        <div className="w-9/12 md:w-3/4 mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
+      <section className="w-full min-h-[85vh] md:min-h-screen pt-28 md:pt-40 pb-0 relative overflow-hidden ">
+        <div className="w-9/12 md:w-3/4 mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 mb-20">
           {/* Left image colllage */}
           <div className="flex flex-col gap-2 order-2 lg:order-1">
             <div className="grid grid-cols-2 gap-6">
@@ -62,7 +62,7 @@ const Hero = () => {
         </div>
 
         {/* Wave Background */}
-        <div className="absolute bottom-0 left-0 w-full h-[40px] pointer-events-none hidden md:block ">
+        <div className="absolute bottom-0  left-0 w-full h-[40px] pointer-events-none hidden md:block ">
           <svg
             className="absolute bottom-0 w-full h-full"
             viewBox="0 0 1200 120"
