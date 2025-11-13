@@ -231,7 +231,7 @@ const Header = () => {
                   whileHover={{ scale: 1.05, y: -5 }}
                   transition={{ duration: 0.3, type: "spring", stiffness: 100 }}
                 >
-                  Sign In
+                  <Link to="/dashboard">Sign In</Link>
                 </motion.button>
                 <motion.button
                   className="bg-skyBlue text-prussianBlue px-4 py-2 rounded-full font-inter transition-colors"
