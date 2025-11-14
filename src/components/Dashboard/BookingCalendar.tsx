@@ -5,7 +5,7 @@ import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "./calendar.css";
 import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
-
+import { motion } from "framer-motion";
 moment.locale("en");
 
 const localizer = momentLocalizer(moment);
@@ -122,7 +122,6 @@ const mockAppointments: BookingEvent[] = [
     },
   },
 ];
-
 export default function BookingCalendar({
   selectedServices,
   selectedStaff,
@@ -132,7 +131,7 @@ export default function BookingCalendar({
   const [date, setDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<BookingEvent | null>(null);
 
-  // Filter events based on filters
+  // Filter appointments based on selected filters
   const filteredEvents = useMemo(() => {
     return mockAppointments.filter((event) => {
       const serviceMatch =
@@ -162,7 +161,7 @@ export default function BookingCalendar({
   };
 
   const eventStyleGetter = (event: BookingEvent) => {
-    let backgroundColor = "#219ebc"; // default blueGreen
+    let backgroundColor = "#219ebc";
 
     switch (event.resource.status) {
       case "confirmed":
@@ -259,75 +258,73 @@ export default function BookingCalendar({
   return (
     <>
       {/* Custom Toolbar */}
-      <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200 shrink-0">
+      <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-skyBlue shrink-0 shadow-sm">
         <div className="flex items-center gap-4">
           <button
             onClick={() => handleToolbarNavigate("TODAY")}
-            className="px-4 py-2 text-sm font-semibold text-prussianBlue bg-skyBlue rounded-lg hover:bg-skyBlue/80 transition-colors"
+            className="px-4 py-2 text-sm font-bold text-white bg-linear-to-r from-blueGreen to-skyBlue rounded-xl hover:shadow-xl transition-all shadow-lg shadow-blueGreen/20"
           >
             Today
           </button>
           <div className="flex items-center gap-1">
             <button
               onClick={() => handleToolbarNavigate("PREV")}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-prussianBlue"
+              className="p-2 hover:bg-[#f0f8fb] rounded-xl transition-all text-prussianBlue"
             >
               <ChevronLeft size={20} />
             </button>
             <button
               onClick={() => handleToolbarNavigate("NEXT")}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-prussianBlue"
+              className="p-2 hover:bg-[#f0f8fb] rounded-xl transition-all text-prussianBlue"
             >
               <ChevronRight size={20} />
             </button>
           </div>
-          <h2 className="text-lg font-semibold text-prussianBlue min-w-[200px]">
+          <h2 className="text-lg font-bold bg-linear-to-r from-blueGreen to-skyBlue bg-clip-text text-transparent min-w-[200px]">
             {getToolbarLabel()}
           </h2>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+          <div className="flex items-center gap-1 bg-[#f0f8fb] rounded-xl p-1.5 border border-skyBlue">
             <button
               onClick={() => setView("day")}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+              className={`px-3 py-1.5 text-sm font-semibold rounded-lg transition-all ${
                 view === "day"
-                  ? "bg-white text-prussianBlue shadow-sm"
-                  : "text-gray-600 hover:text-prussianBlue"
+                  ? "bg-linear-to-r from-blueGreen to-skyBlue text-white shadow-lg shadow-blueGreen/30"
+                  : "text-prussianBlue hover:text-blueGreen hover:bg-white"
               }`}
             >
               Day
             </button>
             <button
               onClick={() => setView("week")}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+              className={`px-3 py-1.5 text-sm font-semibold rounded-lg transition-all ${
                 view === "week"
-                  ? "bg-white text-prussianBlue shadow-sm"
-                  : "text-gray-600 hover:text-prussianBlue"
+                  ? "bg-linear-to-r from-blueGreen to-skyBlue text-white shadow-lg shadow-blueGreen/30"
+                  : "text-prussianBlue hover:text-blueGreen hover:bg-white"
               }`}
             >
               Weekly
             </button>
             <button
               onClick={() => setView("month")}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+              className={`px-3 py-1.5 text-sm font-semibold rounded-lg transition-all ${
                 view === "month"
-                  ? "bg-white text-prussianBlue shadow-sm"
-                  : "text-gray-600 hover:text-prussianBlue"
+                  ? "bg-linear-to-r from-blueGreen to-skyBlue text-white shadow-lg shadow-blueGreen/30"
+                  : "text-prussianBlue hover:text-blueGreen hover:bg-white"
               }`}
             >
               Month
             </button>
+            <button className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-blueGreen to-skyBlue text-white rounded-xl hover:shadow-xl hover:shadow-blueGreen/40 transition-all shadow-lg shadow-blueGreen/30 font-semibold">
+              <Plus size={18} strokeWidth={2.5} />
+              <span>Add</span>
+            </button>
           </div>
-
-          <button className="flex items-center gap-2 px-4 py-2 bg-blueGreen text-white rounded-lg hover:bg-blueGreen/90 transition-colors shadow-sm">
-            <Plus size={18} />
-            <span className="font-medium">Add</span>
-          </button>
         </div>
       </div>
-
-      {/* Calendar */}
+      {/* Event Details Modal */} {/* Calendar */}
       <div className="flex-1 overflow-hidden w-full">
         <Calendar
           localizer={localizer}
@@ -382,11 +379,16 @@ export default function BookingCalendar({
           max={new Date(2025, 10, 13, 22, 0, 0)}
         />
       </div>
-
       {/* Event Details Modal */}
       {selectedEvent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 p-6">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-1020">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: "spring", duration: 1 }}
+            className="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 p-6"
+          >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-2xl font-bold text-prussianBlue">
                 Appointment Details
@@ -408,7 +410,6 @@ export default function BookingCalendar({
                   {selectedEvent.resource.service}
                 </p>
               </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-gray-600">
@@ -446,7 +447,6 @@ export default function BookingCalendar({
                   </p>
                 </div>
               </div>
-
               <div>
                 <label className="text-sm font-medium text-gray-600">
                   Status
@@ -505,17 +505,16 @@ export default function BookingCalendar({
                   </div>
                 </div>
               </div>
-
               <div className="flex gap-3 pt-4">
                 <button className="flex-1 px-4 py-2 bg-blueGreen text-white rounded-lg hover:bg-blueGreen/90 transition-colors font-medium">
                   Edit
                 </button>
-                <button className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium">
+                <button className="flex-1 px-4 py-2 bg-utOrange text-white rounded-lg hover:bg-utOrange/90 transition-colors font-medium">
                   Cancel Appointment
                 </button>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </>
