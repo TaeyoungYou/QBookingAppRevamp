@@ -65,14 +65,14 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
       initial={{ x: -280 }}
       animate={{ x: isOpen ? 0 : -280 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="w-64 bg-gradient-to-b from-[#e8f4f8] via-[#f0f8fb] to-[#fef9f3] text-[#023047] flex flex-col h-screen shadow-xl fixed z-50 border-r border-[#8ecae6]"
+      className="w-64 bg-linear-to-b from-body via-body to-body text-prussianBlue flex flex-col h-screen shadow-xl fixed z-1010 border-r border-blueGreen"
     >
       {/* Logo  */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.5 }}
-        className="h-16 flex items-center px-6 border-b border-[#8ecae6] bg-white/80 backdrop-blur-sm"
+        className="h-16 flex items-center px-6 border-b border-blueGreen bg-white/80 backdrop-blur-sm"
       >
         <img
           src={logo}
