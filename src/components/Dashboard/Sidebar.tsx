@@ -8,7 +8,6 @@ import {
   Clock,
   BarChart3,
   ClipboardList,
-  Home,
   ChevronRight,
 } from "lucide-react";
 import logo from "../../assets/logo.png";
@@ -57,7 +56,7 @@ interface SidebarProps {
   onToggle: () => void;
 }
 
-export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
+export default function Sidebar({ isOpen }: SidebarProps) {
   const location = useLocation();
 
   return (
