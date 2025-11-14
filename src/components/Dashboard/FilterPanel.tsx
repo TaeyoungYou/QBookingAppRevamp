@@ -21,14 +21,7 @@ const services = [
   { id: "Haircut", name: "Haircut" },
 ];
 
-const staff = [
-  { id: "all", name: "All Staff" },
-  { id: "Therapist Anna", name: "Therapist Anna" },
-  { id: "Trainer Sarah", name: "Trainer Sarah" },
-  { id: "Trainer John", name: "Trainer John" },
-  { id: "John Doe", name: "John Doe" },
-  { id: "Stylist Alex", name: "Stylist Alex" },
-];
+const staff = [{ id: "all", name: "All Staff" }];
 
 const locations = [
   { id: "all", name: "All Locations" },
