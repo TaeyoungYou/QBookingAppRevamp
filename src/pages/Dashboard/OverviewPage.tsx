@@ -1,5 +1,5 @@
 import { Menu, ArrowUpRight, Users, CalendarCheck2, Clock } from "lucide-react";
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 import { useDashboardLayout } from "./DashboardLayout";
 
 const statCards = [
