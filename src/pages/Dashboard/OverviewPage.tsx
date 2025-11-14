@@ -90,7 +90,7 @@ export default function OverviewPage() {
             <Menu size={24} className="text-prussianBlue" />
           </button>
           <div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-blueGreen to-skyBlue bg-clip-text text-transparent">
+            <h1 className="text-xl font-bold bg-linear-to-r from-blueGreen to-skyBlue bg-clip-text text-transparent">
               Welcome back, Admin 👋
             </h1>
             <p className="text-sm text-prussianBlue/70">
@@ -176,7 +176,7 @@ export default function OverviewPage() {
                     {booking.time.split(" ")[0]}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-[#023047] truncate">
+                    <p className="text-sm font-bold text-prussianBlue truncate">
                       {booking.customer}
                     </p>
                     <p className="text-sm text-prussianBlue/80">
@@ -225,7 +225,7 @@ export default function OverviewPage() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.35 + index * 0.1 }}
                 >
-                  <div className="flex justify-between text-sm font-bold text-[#023047] mb-2">
+                  <div className="flex justify-between text-sm font-bold text-prussianBlue mb-2">
                     <span>{item.label}</span>
                     <span className="text-blueGreen">{item.value}</span>
                   </div>
@@ -250,7 +250,7 @@ export default function OverviewPage() {
                   💡
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-[#219ebc] mb-1">
+                  <p className="text-xs font-bold text-blueGreen mb-1">
                     Tip of the day
                   </p>
                   <p className="text-sm text-prussianBlue leading-relaxed">
