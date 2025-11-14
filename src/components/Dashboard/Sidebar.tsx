@@ -64,7 +64,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
       initial={{ x: -280 }}
       animate={{ x: isOpen ? 0 : -280 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="w-64 bg-linear-to-b from-body via-body to-body text-prussianBlue flex flex-col h-screen shadow-xl fixed z-1010 border-r border-blueGreen"
+      className="w-64 bg-linear-to-b from-gray-100 via-gray-100 to-skyBlue text-prussianBlue flex flex-col h-screen shadow-xl fixed z-1010 border-r border-blueGreen"
     >
       {/* Logo  */}
       <motion.div
