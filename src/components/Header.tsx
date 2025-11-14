@@ -176,9 +176,12 @@ const Header = () => {
             </nav>
             {/* Mobile Buttons */}
             <div className="mt-8 flex flex-col gap-4 w-full">
-              <button className="bg-gray-100 w-full py-2 rounded-full font-inter text-prussianBlue  transition-colors">
+              <Link
+                to="/dashboard"
+                className="bg-gray-100 w-full py-2 rounded-full font-inter text-prussianBlue text-center  transition-colors"
+              >
                 Sign In
-              </button>
+              </Link>
               <Link
                 to="/appointment"
                 className={`bg-skyBlue text-center w-full py-2 rounded-full font-inter text-prussianBlue transition-colors ${

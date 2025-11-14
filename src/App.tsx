@@ -8,8 +8,8 @@ import ContactUs from "./pages/Landing/ContactUs";
 import DashboardLayout from "./pages/Dashboard/DashboardLayout";
 import OverviewPage from "./pages/Dashboard/OverviewPage";
 import CalendarPage from "./pages/Dashboard/CalendarPage";
-// import CustomersPage from "./pages/Dashboard/CustomersPage";
-// import AnalyticsPage from "./pages/Dashboard/AnalyticsPage";
+import CustomersPage from "./pages/Dashboard/CustomersPage";
+import AnalyticsPage from "./pages/Dashboard/AnalyticsPage";
 const App = () => {
   return (
     <BrowserRouter>
@@ -23,8 +23,8 @@ const App = () => {
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<OverviewPage />} />
           <Route path="calendar" element={<CalendarPage />} />
-          {/* <Route path="customers" element={<CustomersPage />} /> */}
-          {/* <Route path="analytics" element={<AnalyticsPage />} /> */}
+          <Route path="analytics" element={<AnalyticsPage />} />
+          <Route path="customers" element={<CustomersPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
