@@ -10,6 +10,10 @@ import OverviewPage from "./pages/Dashboard/OverviewPage";
 import CalendarPage from "./pages/Dashboard/CalendarPage";
 import CustomersPage from "./pages/Dashboard/CustomersPage";
 import AnalyticsPage from "./pages/Dashboard/AnalyticsPage";
+import SettingsPage from "./pages/Dashboard/SettingsPage";
+import StaffManagementPage from "./pages/Dashboard/StaffManagementPage";
+import StaffProfilePage from "./pages/Dashboard/StaffProfilePage";
+import SalonHubPage from "./pages/Dashboard/SalonHubPage";
 const App = () => {
   return (
     <BrowserRouter>
@@ -25,6 +29,10 @@ const App = () => {
           <Route path="calendar" element={<CalendarPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="customers" element={<CustomersPage />} />
+          <Route path="staff" element={<StaffManagementPage />} />
+          <Route path="salon-hub" element={<SalonHubPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="profile" element={<StaffProfilePage />} />
         </Route>
       </Routes>
     </BrowserRouter>

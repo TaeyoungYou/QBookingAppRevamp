@@ -5,10 +5,11 @@ import {
   LayoutDashboard,
   Users,
   Settings,
-  Clock,
   BarChart3,
-  ClipboardList,
   ChevronRight,
+  UserPlus2,
+  Sparkles,
+  UserCircle2,
 } from "lucide-react";
 import logo from "../../assets/logo.png";
 
@@ -18,37 +19,13 @@ const menuItems = [
     label: "Dashboard",
     path: "/dashboard",
   },
-  {
-    icon: Calendar,
-    label: "Calendar",
-    path: "/dashboard/calendar",
-  },
-  {
-    icon: BarChart3,
-    label: "Analytics",
-    path: "/dashboard/analytics",
-  },
-  {
-    icon: Users,
-    label: "Customers",
-    path: "/dashboard/customers",
-  },
-  {
-    icon: Clock,
-    label: "Upcoming",
-    path: "/dashboard/upcoming",
-  },
-
-  {
-    icon: ClipboardList,
-    label: "Task Center",
-    path: "/dashboard/messages",
-  },
-  {
-    icon: Settings,
-    label: "Settings",
-    path: "/dashboard/settings",
-  },
+  { icon: Calendar, label: "Calendar", path: "/dashboard/calendar" },
+  { icon: UserPlus2, label: "Staff", path: "/dashboard/staff" },
+  { icon: Sparkles, label: "Salon Hub", path: "/dashboard/salon-hub" },
+  { icon: Users, label: "Clients", path: "/dashboard/customers" },
+  { icon: BarChart3, label: "Operations", path: "/dashboard/analytics" },
+  { icon: Settings, label: "Settings", path: "/dashboard/settings" },
+  { icon: UserCircle2, label: "Profile", path: "/dashboard/profile" },
 ];
 
 interface SidebarProps {

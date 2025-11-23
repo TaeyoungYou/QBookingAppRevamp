@@ -25,10 +25,10 @@
 
 .rbc-time-header {
   flex-shrink: 0;
-  background-color: #f0f8fb;
+  background-color: white;
   position: relative;
   z-index: 3;
-  border-bottom: 2px solid #8ecae6;
+  border-bottom: 2px solid #e5e7eb;
   overflow: visible;
 }
 
@@ -57,8 +57,8 @@
   width: 80px !important;
   min-width: 80px !important;
   max-width: 80px !important;
-  background-color: #f0f8fb;
-  border-right: 1px solid #8ecae6;
+  background-color: #f9fafb;
+  border-right: 1px solid #cbd5e1;
   box-sizing: border-box;
 }
 
@@ -108,11 +108,11 @@
   padding: 14px 8px;
   font-weight: 600;
   font-size: 0.75rem;
-  color: #219ebc !important;
+  color: #023047 !important;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   border-right: none;
-  background-color: #f0f8fb !important;
+  background-color: #f9fafb !important;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
@@ -129,7 +129,7 @@
 
 .rbc-header a,
 .rbc-header span {
-  color: #219ebc !important;
+  color: #023047 !important;
   font-weight: 600;
   display: block;
 }
@@ -144,19 +144,19 @@
   width: 80px !important;
   min-width: 80px !important;
   max-width: 80px !important;
-  border-right: 1px solid #8ecae6;
+  border-right: 1px solid #cbd5e1;
   box-sizing: border-box;
 }
 
 .rbc-timeslot-group {
   min-height: 80px;
-  border-bottom: 2px solid #8ecae6;
+  border-bottom: 2px solid #e5e7eb;
   display: flex;
   flex-direction: column;
 }
 
 .rbc-time-slot {
-  border-top: 1px solid #f0f8fb;
+  border-top: 1px solid #f3f4f6;
   min-height: 40px;
 }
 
@@ -177,8 +177,8 @@
   display: flex !important;
   align-items: center;
   justify-content: center;
-  border-left: 1px solid #8ecae6;
-  background-color: #f0f8fb;
+  border-left: 1px solid #cbd5e1;
+  background-color: #f9fafb;
   box-sizing: border-box;
 }
 
@@ -201,8 +201,7 @@
   min-width: 0 !important;
   max-width: 100% !important;
   box-sizing: border-box;
-  border-left: 1px solid #8ecae6;
-  background-color: white;
+  border-left: 1px solid #cbd5e1;
 }
 
 .rbc-time-column,
@@ -271,7 +270,8 @@
 }
 
 .rbc-today {
-  background-color: rgba(139, 92, 246, 0.08) !important;
+  background-color: #8ecae6;
+  background-color: rgba(142, 202, 230, 0.05);
 }
 
 .rbc-off-range-bg {
@@ -334,7 +334,7 @@
 /* Keep headers always visible and not grayed out */
 .rbc-header {
   opacity: 1 !important;
-  background-color: #f0f8fb !important;
+  background-color: #f9fafb !important;
 }
 
 .rbc-time-header-cell {
@@ -456,9 +456,38 @@
 
 /* Custom coloring for specific elements */
 .rbc-header.rbc-today {
-  background-color: rgba(142, 202, 230, 0.25) !important;
+  background-color: rgba(142, 202, 230, 0.1);
 }
 
 .rbc-day-bg.rbc-today {
-  background-color: rgba(142, 202, 230, 0.15) !important;
+  background-color: rgba(142, 202, 230, 0.05);
+}
+
+.closed-day {
+  background-color: #f8fafc !important;
+  opacity: 0.65;
+  position: relative;
+}
+
+.closed-day::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(148, 163, 184, 0.15),
+    rgba(148, 163, 184, 0.15) 8px,
+    transparent 8px,
+    transparent 16px
+  );
+  pointer-events: none;
+}
+
+.rbc-month-view .closed-day {
+  background-color: #f7f9fc !important;
+  opacity: 1;
+}
+
+.rbc-month-view .closed-day::after {
+  display: none;
 }
