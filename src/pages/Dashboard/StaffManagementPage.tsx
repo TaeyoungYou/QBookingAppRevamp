@@ -30,8 +30,7 @@ const getInitials = (name: string) =>
 
 export default function StaffManagementPage() {
   const { isSidebarOpen, setIsSidebarOpen } = useDashboardLayout();
-  const { staff, addStaff, updateStaff, removeStaff, activateStaff } =
-    useStaffDirectory();
+  const { staff, addStaff, removeStaff, activateStaff } = useStaffDirectory();
   const [form, setForm] = useState({
     name: "",
     role: roles[0],
@@ -111,7 +110,9 @@ export default function StaffManagementPage() {
             <p className="text-3xl font-bold text-slate-900 mt-2">
               {pendingInvites.length}
             </p>
-            <p className="text-sm text-slate-500">Awaiting account activation</p>
+            <p className="text-sm text-slate-500">
+              Awaiting account activation
+            </p>
           </motion.div>
 
           <motion.div
@@ -293,4 +294,3 @@ export default function StaffManagementPage() {
     </div>
   );
 }
-

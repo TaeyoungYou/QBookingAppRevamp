@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { Menu, Package2, Truck, WandSparkles, CalendarHeart } from "lucide-react";
+import {
+  Menu,
+  Package2,
+  Truck,
+  WandSparkles,
+  CalendarHeart,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { useDashboardLayout } from "./DashboardLayout";
 
@@ -73,7 +79,9 @@ export default function SalonHubPage() {
               Retail bundles
             </p>
             <p className="text-3xl font-bold text-slate-900 mt-2">32 upsells</p>
-            <p className="text-sm text-slate-500">Oil + buffer bag most popular</p>
+            <p className="text-sm text-slate-500">
+              Oil + buffer bag most popular
+            </p>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -85,7 +93,9 @@ export default function SalonHubPage() {
               Loyalty check-ins
             </p>
             <p className="text-3xl font-bold text-slate-900 mt-2">68%</p>
-            <p className="text-sm text-slate-500">Clients returning within 5 weeks</p>
+            <p className="text-sm text-slate-500">
+              Clients returning within 5 weeks
+            </p>
           </motion.div>
         </div>
 
@@ -97,8 +107,12 @@ export default function SalonHubPage() {
           >
             <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Supply tracker</h3>
-                <p className="text-sm text-slate-500">Auto-alerts for low stock</p>
+                <h3 className="text-lg font-bold text-slate-900">
+                  Supply tracker
+                </h3>
+                <p className="text-sm text-slate-500">
+                  Auto-alerts for low stock
+                </p>
               </div>
               <Package2 size={18} className="text-slate-500" />
             </div>
@@ -134,7 +148,9 @@ export default function SalonHubPage() {
                 <h3 className="text-lg font-bold text-slate-900">
                   Signature experiences
                 </h3>
-                <p className="text-sm text-slate-500">Conversion this {selectedRange.toLowerCase()}</p>
+                <p className="text-sm text-slate-500">
+                  Conversion this {selectedRange.toLowerCase()}
+                </p>
               </div>
               <WandSparkles size={18} className="text-amber-500" />
             </div>
@@ -168,16 +184,26 @@ export default function SalonHubPage() {
         >
           <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-bold text-slate-900">Vendor deliveries</h3>
+              <h3 className="text-lg font-bold text-slate-900">
+                Vendor deliveries
+              </h3>
               <p className="text-sm text-slate-500">Track ETA and notes</p>
             </div>
             <Truck size={18} className="text-slate-500" />
           </div>
           <div className="p-6 space-y-3">
             {[
-              { vendor: "Pure Shades", eta: "Tomorrow 2-4 PM", note: "12 new gel colors" },
+              {
+                vendor: "Pure Shades",
+                eta: "Tomorrow 2-4 PM",
+                note: "12 new gel colors",
+              },
               { vendor: "Calm+Spa", eta: "Friday", note: "3 deluxe soak kits" },
-              { vendor: "Buff & Co", eta: "Awaiting pick-up", note: "Buffers + files" },
+              {
+                vendor: "Buff & Co",
+                eta: "Awaiting pick-up",
+                note: "Buffers + files",
+              },
             ].map((delivery) => (
               <div
                 key={delivery.vendor}
@@ -200,4 +226,3 @@ export default function SalonHubPage() {
     </div>
   );
 }
-
