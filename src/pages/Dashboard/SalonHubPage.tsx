@@ -1,11 +1,5 @@
 import { useState } from "react";
-import {
-  Menu,
-  Package2,
-  Truck,
-  WandSparkles,
-  CalendarHeart,
-} from "lucide-react";
+import { Menu, Package2, Truck, WandSparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { useDashboardLayout } from "./DashboardLayout";
 
