@@ -14,21 +14,18 @@ interface FilterPanelProps {
 
 const services = [
   { id: "all", name: "All Services" },
-  { id: "Facial Treatment", name: "Facial Treatment" },
-  { id: "Yoga", name: "Yoga" },
-  { id: "Personal Training", name: "Personal Training" },
-  { id: "Table for 2", name: "Table for 2" },
-  { id: "Haircut", name: "Haircut" },
+  { id: "Classic Manicure", name: "Classic Manicure" },
+  { id: "Gel Extension", name: "Gel Extension" },
+  { id: "Spa Pedicure", name: "Spa Pedicure" },
+  { id: "Nail Art Session", name: "Nail Art Session" },
+  { id: "Combo Mani + Pedi", name: "Combo Mani + Pedi" },
 ];
 
 const staff = [{ id: "all", name: "All Staff" }];
 
 const locations = [
-  { id: "all", name: "All Locations" },
-  { id: "Spa Downtown", name: "Spa Downtown" },
-  { id: "City Center", name: "City Center" },
-  { id: "Downtown", name: "Downtown" },
-  { id: "Main Street", name: "Main Street" },
+  { id: "all", name: "All Areas" },
+  { id: "Polish Pro Studio", name: "Polish Pro Studio" },
 ];
 
 export default function FilterPanel({

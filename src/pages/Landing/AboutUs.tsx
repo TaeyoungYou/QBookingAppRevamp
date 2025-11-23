@@ -3,6 +3,8 @@ import Header from "../../components/Header";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import Footer from "../../components/Footer";
+import OrlandoImage from "../../assets/teams/Orlando.png";
+
 const AboutUs = () => {
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -17,10 +19,10 @@ const AboutUs = () => {
   const testimonials = [
     {
       quote:
-        "Q Application has completely transformed how we manage our salon bookings. The automated reminders alone have reduced our no-shows by 60%!",
-      name: "Sarah Mitchell",
-      designation: "Owner, Luxe Beauty Salon",
-      src: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=500&h=500&fit=crop",
+        "Orlando keeps our finances running smoothly, making sure budgets, risks, and strategies all line up so the company can grow smartly.",
+      name: "Orlando Reyla",
+      designation: "Chief Financial Officer",
+      src: OrlandoImage,
     },
     {
       quote:
