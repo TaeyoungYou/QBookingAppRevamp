@@ -1,7 +1,6 @@
-import { Menu, ArrowUpRight, Users, CalendarCheck2, Clock } from "lucide-react";
+import { Menu, Users, CalendarCheck2, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import { useDashboardLayout } from "./DashboardLayout";
-
 const statCards = [
   {
     title: "Total Bookings",
@@ -90,7 +89,7 @@ export default function OverviewPage() {
             <Menu size={24} className="text-prussianBlue" />
           </button>
           <div>
-            <h1 className="text-xl font-bold bg-linear-to-r from-blueGreen to-skyBlue bg-clip-text text-transparent">
+            <h1 className="text-xl font-bold  text-slate-900 bg-clip-text ">
               Welcome back, Admin 👋
             </h1>
             <p className="text-sm text-prussianBlue/70">
@@ -98,10 +97,6 @@ export default function OverviewPage() {
             </p>
           </div>
         </div>
-        <button className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-linear-to-r from-blueGreen to-skyBlue text-white font-semibold shadow-lg shadow-blueGreen/30 hover:shadow-xl hover:shadow-blueGreen/40 transition-all hover:-translate-y-0.5">
-          Create booking
-          <ArrowUpRight size={18} />
-        </button>
       </header>
 
       <main className="flex-1 overflow-y-auto px-6 py-6 space-y-6 bg-linear-to-br from-[#f0f8fb] via-[#fef9f3] to-[#f5f5f0]">
@@ -189,15 +184,6 @@ export default function OverviewPage() {
                       </span>
                     </p>
                   </div>
-                  <span
-                    className={`text-xs font-bold px-3 py-1.5 rounded-full ${
-                      booking.status === "Confirmed"
-                        ? "bg-linear-to-r from-blueGreen/20 to-skyBlue/20 text-blueGreen border border-blueGreen"
-                        : "bg-linear-to-r from-selectiveYellow/20 to-utOrange/20 text-utOrange border border-selectiveYellow"
-                    }`}
-                  >
-                    {booking.status}
-                  </span>
                 </motion.li>
               ))}
             </ul>

@@ -85,6 +85,15 @@
   width: 100%;
 }
 
+/* Fix for month view rows - ensure proper order */
+.rbc-month-view .rbc-row {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  width: 100% !important;
+}
+
+
 .rbc-row-content {
   display: flex !important;
   width: 100%;
@@ -117,12 +126,8 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
   min-width: 0;
   box-sizing: border-box;
-  height: 50px;
   opacity: 1 !important;
   visibility: visible !important;
 }
@@ -234,6 +239,7 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+
 .rbc-label {
   padding: 8px 12px;
   font-size: 0.7rem;
@@ -337,6 +343,7 @@
   background-color: #f9fafb !important;
 }
 
+
 .rbc-time-header-cell {
   opacity: 1 !important;
 }
@@ -347,9 +354,48 @@
   overflow: hidden;
 }
 
+/* Disable slot selection in month and week views */
+.rbc-month-view-container .rbc-month-view .rbc-day-slot,
+.rbc-month-view-container .rbc-month-view .rbc-day-bg,
+.rbc-month-view-container .rbc-month-view .rbc-date-cell,
+.rbc-month-view-container .rbc-month-view .rbc-row-segment {
+  pointer-events: none !important;
+  cursor: default !important;
+}
+
+.rbc-month-view-container .rbc-month-view .rbc-event {
+  pointer-events: all !important;
+  cursor: pointer !important;
+}
+
+/* Disable for week view */
+.rbc-week-view .rbc-time-view .rbc-day-slot,
+.rbc-week-view .rbc-time-view .rbc-time-slot {
+  pointer-events: none !important;
+  cursor: default !important;
+}
+
+.rbc-week-view .rbc-time-view .rbc-event {
+  pointer-events: all !important;
+  cursor: pointer !important;
+}
+
 .rbc-month-row {
   border-top: 1px solid #e5e7eb;
   min-height: 100px;
+  display: table !important;
+  table-layout: fixed !important;
+  width: 100% !important;
+}
+
+.rbc-month-row .rbc-row-content {
+  display: table-row !important;
+}
+
+.rbc-month-row .rbc-row-segment {
+  display: table-cell !important;
+  vertical-align: top !important;
+  position: relative !important;
 }
 
 .rbc-day-bg + .rbc-day-bg {
@@ -358,6 +404,14 @@
 
 .rbc-month-header {
   border-bottom: 1px solid #e5e7eb;
+  display: table !important;
+  table-layout: fixed !important;
+  width: 100% !important;
+}
+
+.rbc-month-header .rbc-header {
+  display: table-cell !important;
+  vertical-align: middle !important;
 }
 
 .rbc-date-cell {

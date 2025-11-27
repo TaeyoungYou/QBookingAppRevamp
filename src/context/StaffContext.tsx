@@ -3,6 +3,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useCallback,
   useState,
   type ReactNode,
 } from "react";
@@ -98,7 +99,7 @@ export function StaffProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("salon-staff", JSON.stringify(staff));
   }, [staff]);
 
-  const addStaff: StaffContextValue["addStaff"] = (payload) => {
+  const addStaff: StaffContextValue["addStaff"] = useCallback((payload) => {
     setStaff((prev) => [
       ...prev,
       {
@@ -109,21 +110,27 @@ export function StaffProvider({ children }: { children: ReactNode }) {
         availability: payload.availability ?? "Full-time",
       },
     ]);
-  };
+  }, []);
 
-  const updateStaff: StaffContextValue["updateStaff"] = (id, patch) => {
-    setStaff((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, ...patch } : item))
-    );
-  };
+  const updateStaff: StaffContextValue["updateStaff"] = useCallback(
+    (id, patch) => {
+      setStaff((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, ...patch } : item))
+      );
+    },
+    []
+  );
 
-  const removeStaff = (id: string) => {
+  const removeStaff = useCallback((id: string) => {
     setStaff((prev) => prev.filter((item) => item.id !== id));
-  };
+  }, []);
 
-  const activateStaff = (id: string) => {
-    updateStaff(id, { status: "active" });
-  };
+  const activateStaff = useCallback(
+    (id: string) => {
+      updateStaff(id, { status: "active" });
+    },
+    [updateStaff]
+  );
 
   const value = useMemo(
     () => ({
@@ -133,7 +140,7 @@ export function StaffProvider({ children }: { children: ReactNode }) {
       removeStaff,
       activateStaff,
     }),
-    [staff]
+    [staff, addStaff, updateStaff, removeStaff, activateStaff]
   );
 
   return (

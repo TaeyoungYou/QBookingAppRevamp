@@ -62,7 +62,7 @@ export default function StaffManagementPage() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-[#f5f7fb]">
-      <header className="bg-white/90 backdrop-blur-xl border-b border-slate-200 h-16 flex items-center justify-between px-6 shrink-0 shadow-sm">
+      <header className="bg-white/90 backdrop-blur-xl border-b border-skyBlue h-16 flex items-center justify-between px-6 shrink-0 shadow-sm">
         <div className="flex items-center gap-4">
           <button
             onClick={toggleSidebar}
@@ -263,9 +263,18 @@ export default function StaffManagementPage() {
                   Phone
                 </label>
                 <input
+                  type="tel"
                   value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  onChange={(e) => {
+                    const filteredValue = e.target.value.replace(
+                      /[^\d\s()\-+]/g,
+                      ""
+                    );
+                    setForm({ ...form, phone: filteredValue });
+                  }}
                   placeholder="(555) 000-0000"
+                  pattern="[0-9\s()\-+]+"
+                  inputMode="tel"
                   className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:outline-none"
                 />
               </div>

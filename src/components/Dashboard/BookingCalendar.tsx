@@ -23,6 +23,8 @@ import {
   useStaffDirectory,
   type StaffMember,
 } from "../../context/StaffContext";
+import { useAppointments } from "../../context/AppointmentsContext";
+import { useCustomers } from "../../context/CustomersContext";
 moment.locale("en");
 
 const localizer = momentLocalizer(moment);
@@ -178,6 +180,8 @@ export default function BookingCalendar({
   selectedLocation,
 }: BookingCalendarProps) {
   const { staff } = useStaffDirectory();
+  const { addAppointment } = useAppointments();
+  const { addCustomer, getCustomerByPhone } = useCustomers();
   const [view, setView] = useState<View>(Views.WEEK);
   const [date, setDate] = useState(new Date());
   const [events, setEvents] = useState<BookingEvent[]>(initialEvents);
@@ -191,9 +195,14 @@ export default function BookingCalendar({
     customerName: "",
     customerPhone: "",
     staffId: staff[0]?.id ?? "",
+    duration: serviceCatalog[0].duration,
   });
   const [activeStaffFilter, setActiveStaffFilter] = useState<string>("all");
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedbackType, setFeedbackType] = useState<"success" | "error" | null>(
+    null
+  );
+  const [formError, setFormError] = useState<string | null>(null);
 
   const visibleStaff =
     activeStaffFilter === "all"
@@ -215,9 +224,16 @@ export default function BookingCalendar({
     }));
   }, [staff]);
 
-  const showFeedback = (message: string) => {
+  const showFeedback = (
+    message: string,
+    type: "success" | "error" = "error"
+  ) => {
     setFeedback(message);
-    setTimeout(() => setFeedback(null), 3500);
+    setFeedbackType(type);
+    setTimeout(() => {
+      setFeedback(null);
+      setFeedbackType(null);
+    }, 5000);
   };
 
   const mergedEvents = useMemo(() => {
@@ -269,7 +285,7 @@ export default function BookingCalendar({
   const handleSlotSelect = useCallback(
     (slotInfo: SlotInfo) => {
       if (isClosedDay(slotInfo.start)) {
-        showFeedback("Salon is closed on this day.");
+        showFeedback("Salon is closed on this day.", "error");
         return;
       }
 
@@ -278,11 +294,18 @@ export default function BookingCalendar({
           ? slotInfo.resourceId
           : visibleStaff[0]?.id ?? staff[0]?.id ?? "";
 
-      setDraftSlot({ start: slotInfo.start, end: slotInfo.end });
+      const selectedService =
+        serviceCatalog.find((svc) => svc.name === formData.service) ||
+        serviceCatalog[0];
+      const endTime = new Date(
+        slotInfo.start.getTime() + selectedService.duration * 60 * 1000
+      );
+      setDraftSlot({ start: slotInfo.start, end: endTime });
       setFormData((prev) => ({
         ...prev,
         staffId,
         service: prev.service || serviceCatalog[0].name,
+        duration: selectedService.duration,
       }));
       setIsFormOpen(true);
     },
@@ -292,7 +315,10 @@ export default function BookingCalendar({
   const handleAddQuickAppointment = () => {
     const start = new Date();
     start.setMinutes(0, 0, 0);
-    const end = new Date(start.getTime() + 60 * 60 * 1000);
+    const defaultDuration =
+      serviceCatalog.find((svc) => svc.name === formData.service)?.duration ||
+      60;
+    const end = new Date(start.getTime() + defaultDuration * 60 * 1000);
     setDraftSlot({ start, end });
     setFormData((prev) => ({
       ...prev,
@@ -300,6 +326,7 @@ export default function BookingCalendar({
         activeStaffFilter === "all"
           ? staff[0]?.id ?? prev.staffId
           : activeStaffFilter,
+      duration: defaultDuration,
     }));
     setIsFormOpen(true);
   };
@@ -307,11 +334,13 @@ export default function BookingCalendar({
   const closeForm = () => {
     setIsFormOpen(false);
     setDraftSlot(null);
+    setFormError(null);
     setFormData({
       service: serviceCatalog[0].name,
       customerName: "",
       customerPhone: "",
       staffId: staff[0]?.id ?? "",
+      duration: serviceCatalog[0].duration,
     });
   };
 
@@ -319,25 +348,45 @@ export default function BookingCalendar({
     e.preventDefault();
     if (!draftSlot) return;
 
+    // Clear previous errors
+    setFormError(null);
+
     if (!formData.customerName.trim() || !formData.customerPhone.trim()) {
-      showFeedback("Please provide customer name and phone number.");
+      const errorMsg = "Please provide customer name and phone number.";
+      setFormError(errorMsg);
+      showFeedback(errorMsg, "error");
+      return;
+    }
+
+    if (!formData.duration || formData.duration < 15) {
+      const errorMsg = "Duration must be at least 15 minutes.";
+      setFormError(errorMsg);
+      showFeedback(errorMsg, "error");
       return;
     }
 
     const targetStaff = staffLookup.get(formData.staffId);
     if (!targetStaff) {
-      showFeedback("Add a staff member before scheduling.");
+      const errorMsg = "Add a staff member before scheduling.";
+      setFormError(errorMsg);
+      showFeedback(errorMsg, "error");
       return;
     }
+
+    const endTime = new Date(
+      draftSlot.start.getTime() + formData.duration * 60 * 1000
+    );
 
     const overlaps = events.some(
       (event) =>
         event.staffId === formData.staffId &&
         draftSlot.start < event.end &&
-        draftSlot.end > event.start
+        endTime > event.start
     );
     if (overlaps) {
-      showFeedback("This staff member is already booked for that time.");
+      const errorMsg = "This staff member is already booked for that time.";
+      setFormError(errorMsg);
+      showFeedback(errorMsg, "error");
       return;
     }
 
@@ -348,7 +397,7 @@ export default function BookingCalendar({
       staffId: formData.staffId,
       location: PRIMARY_LOCATION,
       start: draftSlot.start,
-      end: draftSlot.end,
+      end: endTime,
       status: "confirmed",
       customer: {
         name: formData.customerName,
@@ -357,9 +406,19 @@ export default function BookingCalendar({
       resourceId: formData.staffId,
     };
 
+    // Automatically add customer if new (check by phone number)
+    const existingCustomer = getCustomerByPhone(formData.customerPhone);
+    if (!existingCustomer) {
+      addCustomer(formData.customerName, formData.customerPhone);
+    }
+
+    addAppointment(newEvent);
     setEvents((prev) => [...prev, newEvent]);
-    closeForm();
-    showFeedback("Appointment created successfully.");
+    setFormError(null);
+    showFeedback("Appointment created successfully!", "success");
+    setTimeout(() => {
+      closeForm();
+    }, 500);
   };
 
   const getToolbarLabel = () => {
@@ -478,14 +537,55 @@ export default function BookingCalendar({
       </div>
 
       {feedback && (
-        <div className="px-6 py-3 text-sm font-medium text-slate-700">
-          {feedback}
+        <div
+          className={`px-6 py-4 text-sm font-semibold ${
+            feedbackType === "success"
+              ? "bg-emerald-50 border-l-4 border-emerald-500 text-emerald-800"
+              : "bg-red-50 border-l-4 border-red-500 text-red-800"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {feedbackType === "success" ? (
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            ) : (
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            )}
+            <span>{feedback}</span>
+          </div>
         </div>
       )}
 
       <div
         className={`flex-1 overflow-hidden ${
-          view === Views.DAY ? "is-resource-view" : ""
+          view === Views.DAY
+            ? "is-resource-view rbc-day-view"
+            : view === Views.WEEK
+            ? "rbc-week-view"
+            : "rbc-month-view-container"
         }`}
       >
         <Calendar
@@ -497,9 +597,9 @@ export default function BookingCalendar({
           onView={(next) => setView(next)}
           date={date}
           onNavigate={handleNavigate}
-          selectable
+          selectable={view === Views.DAY}
           longPressThreshold={200}
-          onSelectSlot={handleSlotSelect}
+          onSelectSlot={view === Views.DAY ? handleSlotSelect : undefined}
           onSelectEvent={handleSelectEvent}
           step={15}
           timeslots={4}
@@ -525,6 +625,7 @@ export default function BookingCalendar({
           resourceIdAccessor="id"
           resourceTitleAccessor="name"
           views={[Views.DAY, Views.WEEK, Views.MONTH]}
+          dayLayoutAlgorithm={view === Views.MONTH ? "no-overlap" : undefined}
           messages={{
             showMore: (count) => `+${count} more`,
           }}
@@ -628,11 +729,6 @@ export default function BookingCalendar({
                   <h3 className="text-xl font-bold text-slate-900">
                     New Appointment
                   </h3>
-                  <p className="text-sm text-slate-500">
-                    {moment(draftSlot.start).format("dddd, MMM DD")} ·{" "}
-                    {moment(draftSlot.start).format("h:mm A")} -{" "}
-                    {moment(draftSlot.end).format("h:mm A")}
-                  </p>
                 </div>
                 <button
                   onClick={closeForm}
@@ -643,6 +739,67 @@ export default function BookingCalendar({
               </div>
 
               <form className="space-y-4" onSubmit={handleCreateAppointment}>
+                {formError && (
+                  <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                    <p className="text-sm font-medium text-red-800">
+                      {formError}
+                    </p>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-500">
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      value={moment(draftSlot.start).format("YYYY-MM-DD")}
+                      onChange={(e) => {
+                        const dateString = e.target.value;
+                        if (!dateString) return;
+
+                        // Parse date string directly to avoid timezone issues
+                        const [year, month, day] = dateString
+                          .split("-")
+                          .map(Number);
+                        const newDate = new Date(draftSlot.start);
+                        newDate.setFullYear(year, month - 1, day); // month is 0-indexed
+                        newDate.setHours(draftSlot.start.getHours());
+                        newDate.setMinutes(draftSlot.start.getMinutes());
+                        newDate.setSeconds(0);
+                        newDate.setMilliseconds(0);
+
+                        const newEnd = new Date(
+                          newDate.getTime() + formData.duration * 60 * 1000
+                        );
+                        setDraftSlot({ start: newDate, end: newEnd });
+                      }}
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 focus:border-slate-400 focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-500">
+                      Start Time
+                    </label>
+                    <input
+                      type="time"
+                      value={moment(draftSlot.start).format("HH:mm")}
+                      onChange={(e) => {
+                        const [hours, minutes] = e.target.value
+                          .split(":")
+                          .map(Number);
+                        const newStart = new Date(draftSlot.start);
+                        newStart.setHours(hours);
+                        newStart.setMinutes(minutes);
+                        const newEnd = new Date(
+                          newStart.getTime() + formData.duration * 60 * 1000
+                        );
+                        setDraftSlot({ start: newStart, end: newEnd });
+                      }}
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 focus:border-slate-400 focus:outline-none"
+                    />
+                  </div>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-slate-500">
@@ -650,12 +807,25 @@ export default function BookingCalendar({
                     </label>
                     <select
                       value={formData.service}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const selectedService =
+                          serviceCatalog.find(
+                            (svc) => svc.name === e.target.value
+                          ) || serviceCatalog[0];
                         setFormData((prev) => ({
                           ...prev,
                           service: e.target.value,
-                        }))
-                      }
+                          duration: selectedService.duration,
+                        }));
+                        // Update end time based on new duration
+                        if (draftSlot) {
+                          const newEndTime = new Date(
+                            draftSlot.start.getTime() +
+                              selectedService.duration * 60 * 1000
+                          );
+                          setDraftSlot({ ...draftSlot, end: newEndTime });
+                        }
+                      }}
                       className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 focus:border-slate-400 focus:outline-none"
                     >
                       {serviceCatalog.map((svc) => (
@@ -721,13 +891,20 @@ export default function BookingCalendar({
                     <input
                       type="tel"
                       value={formData.customerPhone}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        // Only allow numbers, spaces, parentheses, hyphens, and plus sign
+                        const value = e.target.value.replace(
+                          /[^\d\s()\-+]/g,
+                          ""
+                        );
                         setFormData((prev) => ({
                           ...prev,
-                          customerPhone: e.target.value,
-                        }))
-                      }
+                          customerPhone: value,
+                        }));
+                      }}
                       placeholder="(000) 000-0000"
+                      pattern="[0-9\s()\-+]+"
+                      inputMode="tel"
                       className="w-full rounded-lg border border-slate-200 px-3 py-2 pl-10 text-sm font-medium text-slate-800 focus:border-slate-400 focus:outline-none"
                     />
                     <Phone
@@ -737,12 +914,111 @@ export default function BookingCalendar({
                   </div>
                 </div>
 
-                <p className="text-xs font-medium text-slate-500">
-                  Duration:{" "}
-                  {serviceCatalog.find((svc) => svc.name === formData.service)
-                    ?.duration ?? 60}{" "}
-                  mins
-                </p>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-500">
+                    Duration (minutes)
+                  </label>
+                  <input
+                    type="number"
+                    min="15"
+                    max="480"
+                    step="15"
+                    value={formData.duration || ""}
+                    placeholder="Enter duration"
+                    onFocus={(e) => {
+                      if (formData.duration === 0) {
+                        e.target.value = "";
+                      } else {
+                        e.target.select();
+                      }
+                    }}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Allow empty input while typing
+                      if (value === "") {
+                        setFormData((prev) => ({
+                          ...prev,
+                          duration: 0,
+                        }));
+                        return;
+                      }
+                      const numValue = parseInt(value);
+                      // Only update if it's a valid number
+                      if (!isNaN(numValue)) {
+                        // Don't clamp while typing - allow user to type freely
+                        // This allows typing numbers like 4, 45 without interruption
+                        setFormData((prev) => ({
+                          ...prev,
+                          duration: numValue,
+                        }));
+                        // Only update end time if value is within valid range
+                        if (numValue >= 15 && numValue <= 480 && draftSlot) {
+                          const newEndTime = new Date(
+                            draftSlot.start.getTime() + numValue * 60 * 1000
+                          );
+                          setDraftSlot({ ...draftSlot, end: newEndTime });
+                        }
+                      }
+                    }}
+                    onBlur={(e) => {
+                      // Validate and clamp value on blur
+                      const value =
+                        e.target.value === "" ? 0 : parseInt(e.target.value);
+                      if (isNaN(value) || value < 15) {
+                        const defaultDuration =
+                          serviceCatalog.find(
+                            (svc) => svc.name === formData.service
+                          )?.duration || 60;
+                        const clampedDuration = Math.max(15, defaultDuration);
+                        setFormData((prev) => ({
+                          ...prev,
+                          duration: clampedDuration,
+                        }));
+                        if (draftSlot) {
+                          const newEndTime = new Date(
+                            draftSlot.start.getTime() +
+                              clampedDuration * 60 * 1000
+                          );
+                          setDraftSlot({ ...draftSlot, end: newEndTime });
+                        }
+                      } else if (value > 480) {
+                        const clampedDuration = 480;
+                        setFormData((prev) => ({
+                          ...prev,
+                          duration: clampedDuration,
+                        }));
+                        if (draftSlot) {
+                          const newEndTime = new Date(
+                            draftSlot.start.getTime() +
+                              clampedDuration * 60 * 1000
+                          );
+                          setDraftSlot({ ...draftSlot, end: newEndTime });
+                        }
+                      } else {
+                        // Ensure value is exactly >= 15
+                        const validDuration = Math.max(15, value);
+                        setFormData((prev) => ({
+                          ...prev,
+                          duration: validDuration,
+                        }));
+                        if (draftSlot) {
+                          const newEndTime = new Date(
+                            draftSlot.start.getTime() +
+                              validDuration * 60 * 1000
+                          );
+                          setDraftSlot({ ...draftSlot, end: newEndTime });
+                        }
+                      }
+                    }}
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 focus:border-slate-400 focus:outline-none"
+                  />
+                  <p className="text-xs text-slate-400">
+                    Default:{" "}
+                    {serviceCatalog.find((svc) => svc.name === formData.service)
+                      ?.duration ?? 60}{" "}
+                    mins
+                  </p>
+                </div>
 
                 <button
                   type="submit"
