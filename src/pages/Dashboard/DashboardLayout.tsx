@@ -2,6 +2,9 @@ import { useState } from "react";
 import { Outlet, useOutletContext } from "react-router-dom";
 import Sidebar from "../../components/Dashboard/Sidebar";
 import { StaffProvider } from "../../context/StaffContext";
+import { UserProvider } from "../../context/UserContext";
+import { AppointmentsProvider } from "../../context/AppointmentsContext";
+import { CustomersProvider } from "../../context/CustomersContext";
 
 type DashboardLayoutContext = {
   isSidebarOpen: boolean;
@@ -16,7 +19,10 @@ export default function DashboardLayout() {
   };
 
   return (
+    <UserProvider>
     <StaffProvider>
+        <AppointmentsProvider>
+          <CustomersProvider>
       <div className="h-screen bg-linear-to-br from-[#f0f8fb] via-[#fef9f3] to-[#f5f5f0] flex overflow-hidden">
         {isSidebarOpen && (
           <div
@@ -35,7 +41,10 @@ export default function DashboardLayout() {
           <Outlet context={{ isSidebarOpen, setIsSidebarOpen }} />
         </div>
       </div>
+          </CustomersProvider>
+        </AppointmentsProvider>
     </StaffProvider>
+    </UserProvider>
   );
 }
 

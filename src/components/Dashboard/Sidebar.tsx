@@ -5,27 +5,58 @@ import {
   LayoutDashboard,
   Users,
   Settings,
-  BarChart3,
   ChevronRight,
-  UserPlus2,
-  Sparkles,
-  UserCircle2,
+  Store,
+  UserCog,
+  UserCircle,
 } from "lucide-react";
 import logo from "../../assets/logo.png";
+import { useUser } from "../../context/UserContext";
 
 const menuItems = [
   {
     icon: LayoutDashboard,
     label: "Dashboard",
     path: "/dashboard",
+    adminOnly: false,
   },
-  { icon: Calendar, label: "Calendar", path: "/dashboard/calendar" },
-  { icon: UserPlus2, label: "Staff", path: "/dashboard/staff" },
-  { icon: Sparkles, label: "Salon Hub", path: "/dashboard/salon-hub" },
-  { icon: Users, label: "Clients", path: "/dashboard/customers" },
-  { icon: BarChart3, label: "Operations", path: "/dashboard/analytics" },
-  { icon: Settings, label: "Settings", path: "/dashboard/settings" },
-  { icon: UserCircle2, label: "Profile", path: "/dashboard/profile" },
+  {
+    icon: Calendar,
+    label: "Calendar",
+    path: "/dashboard/calendar",
+    adminOnly: false,
+  },
+  {
+    icon: Store,
+    label: "Salon Hub",
+    path: "/dashboard/salon-hub",
+    adminOnly: false,
+  },
+  {
+    icon: UserCog,
+    label: "Staff Management",
+    path: "/dashboard/staff",
+    adminOnly: true,
+  },
+  {
+    icon: Users,
+    label: "Customers",
+    path: "/dashboard/customers",
+    adminOnly: false,
+  },
+  {
+    icon: UserCircle,
+    label: "Staff Profile",
+    path: "/dashboard/staff-profile",
+    adminOnly: false,
+  },
+
+  {
+    icon: Settings,
+    label: "Settings",
+    path: "/dashboard/settings",
+    adminOnly: true,
+  },
 ];
 
 interface SidebarProps {
@@ -35,6 +66,11 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen }: SidebarProps) {
   const location = useLocation();
+  const { isAdmin, user } = useUser();
+
+  const filteredMenuItems = menuItems.filter(
+    (item) => !item.adminOnly || isAdmin
+  );
 
   return (
     <motion.aside
@@ -60,7 +96,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 py-6 overflow-y-auto scrollbar-thin scrollbar-thumb-[#219ebc] scrollbar-track-transparent">
         <div className="px-3 space-y-1">
-          {menuItems.map((item, index) => {
+          {filteredMenuItems.map((item, index) => {
             const Icon = item.icon;
             // isActive is true if the current path is the same as the item path
             const isActive = location.pathname === item.path;
@@ -123,13 +159,23 @@ export default function Sidebar({ isOpen }: SidebarProps) {
             transition={{ type: "spring", stiffness: 300 }}
             className="w-11 h-11 bg-linear-to-r from-blueGreen to-skyBlue rounded-full flex items-center justify-center text-white font-bold shadow-lg shadow-blueGreen/30"
           >
-            A
+            {user?.name
+              ?.split(" ")
+              .map((n) => n[0])
+              .join("")
+              .slice(0, 2)
+              .toUpperCase() || "U"}
           </motion.div>
           <div className="flex-1">
             <p className="text-sm font-bold text-prussianBlue group-hover:text-BlueGreen transition-colors">
-              Admin User
+              {user?.name || "User"}
             </p>
-            <p className="text-xs text-prussianBlue/70">admin@example.com</p>
+            <p className="text-xs text-prussianBlue/70">
+              {user?.email || "user@example.com"}
+            </p>
+            <p className="text-xs text-prussianBlue/50 capitalize">
+              {user?.role || "employee"}
+            </p>
           </div>
         </div>
       </motion.div>

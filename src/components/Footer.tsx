@@ -4,12 +4,13 @@ import {
   FaInstagram,
   FaLinkedinIn,
 } from "react-icons/fa6";
-import { MdEmail, MdPhone } from "react-icons/md";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { MdEmail, MdPhone } from "react-icons/md";
 const Footer = () => {
   return (
     <motion.footer
-      className="w-full  bg-linear-to-r from-utOrange to-selectiveYellow border-t border-white rounded-tr-full mt-28"
+      className="w-full bg-linear-to-r from-utOrange to-selectiveYellow border-t border-white rounded-tr-full mt-28"
       whileInView={{
         opacity: [0, 1],
         x: ["-100%", "0%"],
@@ -34,16 +35,19 @@ const Footer = () => {
               operations, reduces no-shows, and enhances customer satisfaction
               with seamless booking experiences.
             </p>
-            <button className="bg-blueGreen text-white px-8 py-3 rounded-full font-inter text-base hover:bg-blueGreen/90 transition-colors">
+            <Link
+              to="/contact-us"
+              className="inline-flex items-center bg-blueGreen text-white px-8 py-3 rounded-full font-inter text-base hover:bg-blueGreen/90 transition-colors"
+            >
               Get in touch
-            </button>
+            </Link>
           </div>
 
           {/* Right Content */}
           <div>
             <h3 className="font-inter text-xl font-semibold text-prussianBlue mb-4">
               Our Contacts
-            </h3>{" "}
+            </h3>
             {/* Contact Links */}
             <div className="space-y-2 mb-6">
               <a
@@ -66,7 +70,9 @@ const Footer = () => {
             {/* Social Links */}
             <div className="flex gap-2">
               <motion.a
-                href="#"
+                href="https://facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-prussianBlue hover:bg-blueGreen hover:text-white transition-all border border-gray-200"
                 aria-label="Facebook"
                 whileHover={{ scale: 1.05, y: -5 }}
@@ -76,7 +82,9 @@ const Footer = () => {
                 <FaFacebookF className="text-base" />
               </motion.a>
               <motion.a
-                href="#"
+                href="https://twitter.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-prussianBlue hover:bg-blueGreen hover:text-white transition-all border border-gray-200"
                 aria-label="Twitter"
                 whileHover={{ scale: 1.05, y: -5 }}
@@ -86,7 +94,9 @@ const Footer = () => {
                 <FaXTwitter className="text-base" />
               </motion.a>
               <motion.a
-                href="#"
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-prussianBlue hover:bg-blueGreen hover:text-white transition-all border border-gray-200"
                 aria-label="Instagram"
                 whileHover={{ scale: 1.05, y: -5 }}
@@ -96,7 +106,9 @@ const Footer = () => {
                 <FaInstagram className="text-base" />
               </motion.a>
               <motion.a
-                href="#"
+                href="https://linkedin.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-prussianBlue hover:bg-blueGreen hover:text-white transition-all border border-gray-200"
                 aria-label="LinkedIn"
                 whileHover={{ scale: 1.05, y: -5 }}
@@ -118,4 +130,5 @@ const Footer = () => {
     </motion.footer>
   );
 };
+
 export default Footer;
