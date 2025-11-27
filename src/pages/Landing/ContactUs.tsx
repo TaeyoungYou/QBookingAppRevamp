@@ -1,13 +1,5 @@
 import { motion } from "framer-motion";
-import {
-  Phone,
-  Mail,
-  MapPin,
-  MessageSquare,
-  Clock,
-  Check,
-  Send,
-} from "lucide-react";
+import { Phone, Mail, MessageSquare, Clock, Check, Send } from "lucide-react";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 

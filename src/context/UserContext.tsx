@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  type ReactNode,
+} from "react";
 
 export type UserRole = "admin" | "employee";
 
@@ -78,6 +84,3 @@ export const useUser = () => {
   }
   return context;
 };
-
-
-

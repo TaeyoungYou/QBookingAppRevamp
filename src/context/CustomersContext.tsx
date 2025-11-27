@@ -3,10 +3,9 @@ import {
   useContext,
   useState,
   useEffect,
-  ReactNode,
+  type ReactNode,
 } from "react";
 import { useAppointments } from "./AppointmentsContext";
-import moment from "moment";
 
 export interface Customer {
   id: string;
@@ -87,7 +86,9 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
         }
       } else {
         // Check if customer already exists in stored customers
-        const storedCustomer = storedCustomers.find((c) => c.phone === phone);
+        const storedCustomer = storedCustomers.find(
+          (c: Customer) => c.phone === phone
+        );
         if (storedCustomer) {
           customerMap.set(phone, {
             ...storedCustomer,
@@ -120,7 +121,7 @@ export function CustomersProvider({ children }: { children: ReactNode }) {
     });
 
     // Merge with existing customers that don't have appointments
-    storedCustomers.forEach((customer) => {
+    storedCustomers.forEach((customer: Customer) => {
       if (!customerMap.has(customer.phone)) {
         customerMap.set(customer.phone, customer);
       }
