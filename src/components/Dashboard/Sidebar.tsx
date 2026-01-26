@@ -11,7 +11,10 @@ import {
   UserCircle,
 } from "lucide-react";
 import logo from "../../assets/logo.png";
-import { useUser } from "../../context/UserContext";
+// import { useUser } from "../../context/UserContext";
+import {useQuery} from "convex/react";
+import {api} from "../../../convex/_generated/api";
+
 
 const menuItems = [
   {
@@ -66,10 +69,10 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen }: SidebarProps) {
   const location = useLocation();
-  const { isAdmin, user } = useUser();
+  const user = useQuery(api.functions.users.getCurrentUser);
 
   const filteredMenuItems = menuItems.filter(
-    (item) => !item.adminOnly || isAdmin
+    (item) => !item.adminOnly || user?.status == "owner"
   );
 
   return (
@@ -174,7 +177,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
               {user?.email || "user@example.com"}
             </p>
             <p className="text-xs text-prussianBlue/50 capitalize">
-              {user?.role || "employee"}
+              {user?.status || "employee"}
             </p>
           </div>
         </div>

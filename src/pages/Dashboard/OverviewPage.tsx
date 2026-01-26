@@ -1,6 +1,11 @@
 import { Menu, Users, CalendarCheck2, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import { useDashboardLayout } from "./DashboardLayout";
+import {useQuery} from "convex/react";
+import {api} from "../../../convex/_generated/api";
+import {useBookingProcess} from "../../hooks/useBookingProcess.ts";
+import {Link} from "react-router-dom";
+
 const statCards = [
   {
     title: "Total Bookings",
@@ -31,30 +36,6 @@ const statCards = [
   },
 ];
 
-const upcomingBookings = [
-  {
-    time: "09:00 AM",
-    customer: "Emma Wilson",
-    service: "Facial Treatment",
-    staff: "Sophia Tan",
-    status: "Confirmed",
-  },
-  {
-    time: "11:30 AM",
-    customer: "Ethan Miller",
-    service: "Classic Haircut",
-    staff: "Liam Chen",
-    status: "Pending",
-  },
-  {
-    time: "02:00 PM",
-    customer: "Chloe Anderson",
-    service: "Personal Training",
-    staff: "Mason Lee",
-    status: "Confirmed",
-  },
-];
-
 const insights = [
   {
     label: "Weekly Capacity",
@@ -74,8 +55,10 @@ const insights = [
 ];
 
 export default function OverviewPage() {
+  const user = useQuery(api.functions.users.getCurrentUser);
   const { isSidebarOpen, setIsSidebarOpen } = useDashboardLayout();
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  const {hydratedAppointmentsForBusiness} = useBookingProcess();
 
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
@@ -90,7 +73,7 @@ export default function OverviewPage() {
           </button>
           <div>
             <h1 className="text-xl font-bold  text-slate-900 bg-clip-text ">
-              Welcome back, Admin 👋
+              Welcome back, {user?.name}
             </h1>
             <p className="text-sm text-prussianBlue/70">
               Here's a quick glance at today's schedule and performance.
@@ -155,32 +138,35 @@ export default function OverviewPage() {
                 </p>
               </div>
               <button className="text-sm font-semibold text-blueGreen hover:text-skyBlue transition-colors">
-                View calendar
+               <Link to = "/dashboard/calendar">View calendar</Link>
               </button>
             </div>
             <ul className="divide-y divide-skyBlue/30">
-              {upcomingBookings.map((booking, idx) => (
+              {hydratedAppointmentsForBusiness?.map((booking, idx) => (
                 <motion.li
-                  key={booking.customer}
+                  key={booking.customerId}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 + idx * 0.1 }}
                   className="px-6 py-5 flex items-center gap-4 hover:bg-[#f0f8fb] transition-colors"
                 >
                   <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-skyBlue/30 to-blueGreen/20 border border-blueGreen flex items-center justify-center text-blueGreen font-bold shadow-sm">
-                    {booking.time.split(" ")[0]}
+                    {booking.displayTime.format("HH:mm")}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-prussianBlue truncate">
-                      {booking.customer}
+                      {booking.customerName}
                     </p>
                     <p className="text-sm text-prussianBlue/80">
-                      {booking.service}
+                      {booking.serviceName}
+                    </p>
+                    <p className="text-sm text-prussianBlue/80">
+                      {booking.displayDate}
                     </p>
                     <p className="text-xs text-prussianBlue/60 mt-1">
                       Staff:{" "}
                       <span className="text-prussianBlue font-medium">
-                        {booking.staff}
+                        {booking.staffName}
                       </span>
                     </p>
                   </div>

@@ -15,6 +15,8 @@ import StaffManagementPage from "./pages/Dashboard/StaffManagementPage";
 import StaffProfilePage from "./pages/Dashboard/StaffProfilePage";
 import SettingsPage from "./pages/Dashboard/SettingsPage";
 import { useUser } from "./context/UserContext";
+import LoginPage from "./pages/Auth/LoginPage.tsx";
+import SignUpForm from "./components/Auth/SignUpForm.tsx";
 
 function ProtectedRoute({
   children,
@@ -53,6 +55,8 @@ const App = () => {
         <Route path="/about-us" element={<AboutUs />} />
         <Route path="/appointment" element={<Appoiment />} />
         <Route path="/contact-us" element={<ContactUs />} />
+         <Route path="/login" element={<LoginPage />}/>
+        <Route path = "/sign-up" element ={<SignUpForm/>}/>
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<OverviewPage />} />
           <Route path="calendar" element={<CalendarPage />} />

@@ -1,7 +1,14 @@
-import { useState } from "react";
+import {useMemo, useState} from "react";
 import type { Appointment, FormData } from "../data/appointments";
+import type {Id} from "../../convex/_generated/dataModel";
+import {useBookingQueries} from "./useBookingQueries.ts";
+import moment from "moment";
 
 export const useBookingProcess = () => {
+
+
+
+
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [showForm, setShowForm] = useState<boolean>(false);
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -10,13 +17,138 @@ export const useBookingProcess = () => {
     email: "",
     phone: "",
     industry: "",
+
+    //todo: this should be the business name
     location: "",
+
     service: "",
     date: "",
     time: "",
     staff: "",
   });
 
+  const {
+    employeeId,
+    businessId,
+    serviceId,
+    availableSlots,
+    // rawAppointments,
+    allBusinesses,
+    allStaff,
+    allServices,
+    appointmentsForUser,
+    appointmentsForBusiness,
+    allUsers,
+    allIndustries,
+    user,
+    cancelAppointment,
+    createAppointment,
+  } = useBookingQueries(formData);
+
+
+  const getAvailableTimes = () => availableSlots ?? [];
+
+
+  //Filtering all appointments
+  //changed for user
+  const hydratedAppointments = useMemo(() => {
+    if (!appointmentsForUser) return [];
+
+    return appointmentsForUser.map((a) => {
+      const business = allBusinesses.find((b) => b._id === a.businessId);
+      const staff = allStaff.find((s) => s._id === a.employeeId);
+      const service = allServices.find((srv) => srv._id === a.serviceId);
+      const user = allUsers.find((u) => u._id === a.customerId);
+      const industry = allIndustries.find(i => i._id === business?.industryId);
+
+      return {
+        ...a,
+
+        // Business info
+        businessName: business?.businessName ?? "",
+        businessLocation: business?.businessAddress ?? "",
+
+        // Staff info
+        staffName: staff?.name ?? "",
+
+        // Service info
+        serviceName: service?.serviceName ?? "",
+
+        // Customer info
+        customerName: user?.name ?? a.guestInfo?.name ?? "",
+        customerEmail: user?.email ?? a.guestInfo?.email ?? "",
+        customerPhone: user?.phone ?? a.guestInfo?.phone ?? "",
+
+        // Industry Name
+        industryValue: industry?.value ?? "",
+
+        // Extract readable date + time for UI
+        displayDate: moment.utc(a.appointmentStart).local().format("MMM DD, YYYY"),
+        displayTime: moment.utc(a.appointmentStart),
+
+        displayTimeStart: moment.utc(a.appointmentStart),
+        displayTimeEnd: moment.utc(a.appointmentEnd),
+      };
+    });
+  }, [
+    appointmentsForUser,
+    allBusinesses,
+    allStaff,
+    allServices,
+    allUsers,
+    allIndustries,
+  ]);
+
+  const hydratedAppointmentsForBusiness = useMemo(() => {
+    if (!appointmentsForUser) return [];
+
+    return appointmentsForBusiness?.map((a) => {
+      const business = allBusinesses.find((b) => b._id === a.businessId);
+      const staff = allStaff.find((s) => s._id === a.employeeId);
+      const service = allServices.find((srv) => srv._id === a.serviceId);
+      const user = allUsers.find((u) => u._id === a.customerId);
+      const industry = allIndustries.find(i => i._id === business?.industryId);
+
+      return {
+        ...a,
+
+        // Business info
+        businessName: business?.businessName ?? "",
+        businessLocation: business?.businessAddress ?? "",
+
+        // Staff info
+        staffName: staff?.name ?? "",
+
+        // Service info
+        serviceName: service?.serviceName ?? "",
+
+        // Customer info
+        customerName: user?.name ?? a.guestInfo?.name ?? "",
+        customerEmail: user?.email ?? a.guestInfo?.email ?? "",
+        customerPhone: user?.phone ?? a.guestInfo?.phone ?? "",
+
+        // Industry Name
+        industryValue: industry?.value ?? "",
+
+        // Extract readable date + time for UI
+        displayDate: moment.utc(a.appointmentStart).local().format("MMM DD, YYYY"),
+        displayTime: moment.utc(a.appointmentStart),
+
+        displayTimeStart: moment.utc(a.appointmentStart),
+        displayTimeEnd: moment.utc(a.appointmentEnd),
+      };
+    });
+  }, [
+    appointmentsForBusiness,
+    allBusinesses,
+    allStaff,
+    allServices,
+    allUsers,
+    allIndustries,
+  ]);
+
+
+  //Steps
   const handleNextStep = () => {
     setCurrentStep((prev) => Math.min(prev + 1, 5));
   };
@@ -25,22 +157,7 @@ export const useBookingProcess = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  // Backend Todo: Fetch available times from the server (available time in range of business hours)
-  // interval range is 15 mins
-  const getAvailableTimes = () => {
-    const times: string[] = [];
-    for (let hour = 9; hour <= 17; hour++) {
-      // this will add available times for each hour
-      // if the pad is 9am it will add as 09:00
-      // if the pad is 17pm it will add as 17:30
-      times.push(`${hour.toString().padStart(2, "0")}:00`);
-      // eg: because the business only opens till 17:00, so it will not add 17:30
-      if (hour < 17) {
-        times.push(`${hour.toString().padStart(2, "0")}:30`);
-      }
-    }
-    return times;
-  };
+
 
   // Reset the form data when the form is closed
   const resetForm = () => {
@@ -59,26 +176,43 @@ export const useBookingProcess = () => {
     });
   };
 
-  // Backend Todo: Submit the form data to the server
-  const handleSubmitForm = () => {
+
+  const handleSubmitForm = async () => {
     const newAppointment: Appointment = {
       id: Date.now().toString(),
       ...formData,
       status: "pending",
     };
+
+    const startISO = `${formData.date}T${formData.time}:00.000Z`;
+    const endISO = new Date(new Date(startISO).getTime() + 30 * 60 * 1000).toISOString();
+
+    //Backend
+    await createAppointment({
+      customerId: user?.id as Id<"users">,
+      employeeId: employeeId as Id<"staff">,
+      serviceId: serviceId as Id<"services">,
+      businessId: businessId as Id<"businesses">,
+      appointmentDate: formData.date,
+      appointmentStart: startISO,
+      appointmentEnd: endISO,
+      appointmentStatus: "scheduled",
+      dayOfWeek: new Date(formData.date).getDay(),
+      guestInfo: {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+      },
+    });
+
     setAppointments((prev) => [...prev, newAppointment]);
     resetForm();
   };
 
-  // Backend Todo: Change the status of the appointment when the appointment is cancelled
-  const handleCancel = (id: string) => {
-    setAppointments((prev) =>
-      prev.map((appointment) =>
-        appointment.id === id
-          ? { ...appointment, status: "cancelled" }
-          : appointment
-      )
-    );
+  const handleCancel = async (id: Id<"appointments">) => {
+      await cancelAppointment({
+        id: id,
+      })
   };
 
   const getStatusColor = (status: string) => {
@@ -153,7 +287,10 @@ export const useBookingProcess = () => {
     setShowForm,
     setCurrentStep,
     setFormData,
+
     // Functions
+    hydratedAppointments,
+    hydratedAppointmentsForBusiness,
     getAvailableTimes,
     handleSubmitForm,
     handleNextStep,

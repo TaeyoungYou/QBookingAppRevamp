@@ -21,5 +21,15 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+
+  "paths": {
+    "@convex-dev/auth/providers/*": [
+    "./node_modules/@convex-dev/auth/dist/providers/*/index.d.ts"
+    ]
+  },
+  "include": [
+    "convex/**/*.ts",
+    "node_modules/@convex-dev/auth/**/*.d.ts",
+    "src"
+  ]
 }

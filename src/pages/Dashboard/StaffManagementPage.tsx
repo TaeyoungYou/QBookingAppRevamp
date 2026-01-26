@@ -4,13 +4,14 @@ import {
   Menu,
   UserPlus,
   Mail,
-  Phone,
+  // Phone,
   ShieldCheck,
   BadgeCheck,
   UserMinus,
 } from "lucide-react";
 import { useDashboardLayout } from "./DashboardLayout";
 import { useStaffDirectory } from "../../context/StaffContext";
+import {useAuthQueries} from "../../hooks/useAuthQueries.ts";
 
 const roles = [
   "Lead Nail Artist",
@@ -20,6 +21,7 @@ const roles = [
   "Salon Coordinator",
 ];
 
+
 const getInitials = (name: string) =>
   name
     .split(" ")
@@ -28,9 +30,18 @@ const getInitials = (name: string) =>
     .slice(0, 2)
     .toUpperCase();
 
+
 export default function StaffManagementPage() {
   const { isSidebarOpen, setIsSidebarOpen } = useDashboardLayout();
-  const { staff, addStaff, removeStaff, activateStaff } = useStaffDirectory();
+
+  const {staff, addStaff, user
+  //  removeStaff
+  } = useAuthQueries();
+  //staff
+  const {activateStaff } = useStaffDirectory();
+
+
+
   const [form, setForm] = useState({
     name: "",
     role: roles[0],
@@ -41,19 +52,22 @@ export default function StaffManagementPage() {
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
-  const pendingInvites = staff.filter((member) => member.status === "invited");
-  const activeStaff = staff.filter((member) => member.status === "active");
+  const pendingInvites = staff?.filter((member) => member.status === "invited");
+  const activeStaff = staff?.filter((member) => member.status === "active");
 
-  const handleSubmit = (event: React.FormEvent) => {
+  //Submit button for invite
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!form.name.trim() || !form.email.trim()) return;
 
-    addStaff({
+    await addStaff({
       name: form.name.trim(),
       role: form.role,
       email: form.email.trim(),
-      phone: form.phone.trim() || "(not provided)",
-      notes: note,
+      // phone: form.phone.trim() || "(not provided)",
+      bio: note,
+      rating: 100,
+      businessId: user?.businessId
     });
 
     setForm({ name: "", role: roles[0], email: "", phone: "" });
@@ -93,7 +107,7 @@ export default function StaffManagementPage() {
               Active Staff
             </p>
             <p className="text-3xl font-bold text-slate-900 mt-2">
-              {activeStaff.length}
+              {activeStaff?.length}
             </p>
             <p className="text-sm text-slate-500">Team members on the floor</p>
           </motion.div>
@@ -108,7 +122,7 @@ export default function StaffManagementPage() {
               Pending Invites
             </p>
             <p className="text-3xl font-bold text-slate-900 mt-2">
-              {pendingInvites.length}
+              {pendingInvites?.length}
             </p>
             <p className="text-sm text-slate-500">
               Awaiting account activation
@@ -125,7 +139,7 @@ export default function StaffManagementPage() {
               Roles
             </p>
             <p className="text-3xl font-bold text-slate-900 mt-2">
-              {Array.from(new Set(staff.map((member) => member.role))).length}
+              {Array.from(new Set(staff?.map((member) => member.role))).length}
             </p>
             <p className="text-sm text-slate-500">Unique specialties covered</p>
           </motion.div>
@@ -133,9 +147,9 @@ export default function StaffManagementPage() {
 
         <div className="grid gap-6 lg:grid-cols-3">
           <section className="lg:col-span-2 space-y-4">
-            {staff.map((member) => (
+            {staff?.map((member) => (
               <motion.div
-                key={member.id}
+                key={member._id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm flex flex-wrap gap-4 justify-between"
@@ -143,11 +157,11 @@ export default function StaffManagementPage() {
                 <div className="flex items-center gap-4">
                   <div
                     className="h-12 w-12 rounded-full border-2 flex items-center justify-center text-sm font-semibold text-slate-700 bg-slate-50"
-                    style={{ borderColor: member.accentColor }}
+                    // style={{ borderColor: member.accentColor }}
                   >
-                    {member.avatar ? (
+                    {member.image ? (
                       <img
-                        src={member.avatar}
+                        src={member.image}
                         alt={member.name}
                         className="h-full w-full rounded-full object-cover"
                       />
@@ -165,23 +179,23 @@ export default function StaffManagementPage() {
                         <Mail size={12} />
                         {member.email}
                       </span>
-                      <span className="inline-flex items-center gap-1">
-                        <Phone size={12} />
-                        {member.phone}
-                      </span>
-                      {member.availability && (
-                        <span className="inline-flex items-center gap-1">
-                          <ShieldCheck size={12} />
-                          {member.availability}
-                        </span>
-                      )}
+                      {/*<span className="inline-flex items-center gap-1">*/}
+                      {/*  <Phone size={12} />*/}
+                      {/*  {member.phone}*/}
+                      {/*</span>*/}
+                      {/*{member.availability && (*/}
+                      {/*  <span className="inline-flex items-center gap-1">*/}
+                      {/*    <ShieldCheck size={12} />*/}
+                      {/*    {member.availability}*/}
+                      {/*  </span>*/}
+                      {/*)}*/}
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {member.status === "invited" ? (
                     <button
-                      onClick={() => activateStaff(member.id)}
+                      onClick={() => activateStaff(member._id)}
                       className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-600 border border-emerald-200"
                     >
                       <ShieldCheck size={14} />
@@ -194,7 +208,7 @@ export default function StaffManagementPage() {
                     </span>
                   )}
                   <button
-                    onClick={() => removeStaff(member.id)}
+                    // onClick={() => removeStaff(member._id)}
                     className="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-500 hover:bg-rose-50"
                   >
                     <UserMinus size={14} />

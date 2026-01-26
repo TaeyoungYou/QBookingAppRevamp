@@ -2,7 +2,16 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import logo from "../assets/logo.png";
 import { Link, useLocation } from "react-router-dom";
+import {useQuery} from "convex/react";
+import {api} from "../../convex/_generated/api";
+import { useAuthActions } from "@convex-dev/auth/react";
+
+
+
+
 const Header = () => {
+  const user = useQuery(api.functions.users.getCurrentUser);
+  const {signOut} = useAuthActions();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
@@ -184,7 +193,7 @@ const Header = () => {
               </Link>
               <Link
                 to="/appointment"
-                className={`bg-skyBlue text-center w-full py-2 rounded-full font-inter text-prussianBlue transition-colors ${
+                className={`bg-skyBlue  text-white text-center w-full py-2 rounded-full font-inter text-prussianBlue transition-colors ${
                   location.pathname === "/appointment"
                     ? "text-skyBlue"
                     : "text-prussianBlue"
@@ -229,19 +238,70 @@ const Header = () => {
                   isScrolled ? "hidden" : "visible"
                 }`}
               >
-                <motion.button
-                  className="bg-gray-100 px-4 py-2 rounded-full font-inter  transition-colors"
-                  whileHover={{ scale: 1.05, y: -5 }}
-                  transition={{ duration: 0.3, type: "spring", stiffness: 100 }}
-                >
-                  <Link to="/dashboard">Sign In</Link>
-                </motion.button>
+                {!user? (
+                    <motion.button
+                        whileHover={{ scale: 1.05, y: -5 }}
+                        transition={{ duration: 0.3, type: "spring", stiffness: 100 }}
+                        className="bg-gray-100 hover:bg-gray-200 px-6 py-3 rounded-full font-inter font-medium text-gray-800 shadow-sm hover:shadow transition-all"
+                    >
+                      <Link to="/login" className="block w-full h-full">
+                        Sign In
+                      </Link>
+                    </motion.button>
+                ) : (
+                    <div className="flex items-center gap-4 flex-wrap">
+                      {/* Dashboard — only show if user has a business */}
+                      {user.businessId ? (
+                          <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.98 }}
+                              transition={{ type: "spring", stiffness: 300 }}
+                              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-3 rounded-full font-inter font-semibold shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+                          >
+                            <Link to="/dashboard" className="flex items-center gap-2">
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 012-2h8a2 2 0 012 2v6m-6-8V9a2 2 0 012-2h2a2 2 0 012 2v2" />
+                              </svg>
+                              Dashboard
+                            </Link>
+                          </motion.button>
+                      ) : null}
+
+                      {/* Sign Out — always show when logged in */}
+                      <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.98 }}
+                          transition={{ type: "spring", stiffness: 300 }}
+                          onClick={() => signOut()}
+                          className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-full font-inter font-medium shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Sign Out
+                      </motion.button>
+                    </div>
+                )}
+
+
+
+
                 <motion.button
                   className="bg-skyBlue text-prussianBlue px-4 py-2 rounded-full font-inter transition-colors"
                   whileHover={{ scale: 1.05, y: -5 }}
                   transition={{ duration: 0.3, type: "spring", stiffness: 100 }}
                 >
+
+                  <Link
+                      to="/appointment"
+                      className={`bg-skyBlue text-white text-center w-full py-2 rounded-full font-inter text-prussianBlue transition-colors ${
+                          location.pathname === "/appointment"
+                              ? "text-skyBlue"
+                              : "text-prussianBlue"
+                      }`}
+                  >
                   Book Your Appointment
+                  </Link>
                 </motion.button>
               </div>
             )}

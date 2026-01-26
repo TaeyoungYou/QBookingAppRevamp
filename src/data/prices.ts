@@ -18,8 +18,8 @@ const TIERS: Tier[] = [
     name: "Beginner",
     description:
       "Ideal for small teams getting started with appointment scheduling.",
-    monthlyPrice: 29.99,
-    yearlyPrice: 24.99,
+    monthlyPrice: 0.00,
+    yearlyPrice: 0.00,
     cta: "Start Now",
     mostPopular: false,
     features: [

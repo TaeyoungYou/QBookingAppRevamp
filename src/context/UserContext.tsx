@@ -44,6 +44,7 @@ const defaultUser: User = {
   memberSince: "N/A",
 };
 
+
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUserState] = useState<User | null>(() => {
     const stored = localStorage.getItem("salon-user");

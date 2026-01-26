@@ -2,6 +2,7 @@ import hero1 from "../assets/home/hero_p1.avif";
 import hero2 from "../assets/home/hero_p2.avif";
 import hero3 from "../assets/home/hero_p3.avif";
 import { motion } from "framer-motion";
+import {Link} from "react-router-dom";
 const Hero = () => {
   return (
     <>
@@ -56,7 +57,16 @@ const Hero = () => {
               transition={{ duration: 0.3, type: "spring", stiffness: 100 }}
               className="bg-skyBlue block  sm:w-auto text-prussianBlue px-5 py-3 rounded-full font-inter mt-6 mx-auto lg:mx-0"
             >
-              Book Your Appointment
+              <Link
+                  to="/appointment"
+                  className={`font-inter transition-colors ${
+                      location.pathname === "/appointment"
+                          ? "text-skyBlue"
+                          : "text-prussianBlue/80"
+                  }`}
+              >
+                Book Your Appointment </Link>
+
             </motion.button>
           </div>
         </div>

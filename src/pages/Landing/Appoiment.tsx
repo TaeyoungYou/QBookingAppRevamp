@@ -22,9 +22,9 @@ import Header from "../../components/Header";
 import { motion, AnimatePresence } from "framer-motion";
 import Footer from "../../components/Footer";
 import { useEffect } from "react";
+
 const Appoiment = () => {
   const {
-    appointments,
     showForm,
     currentStep,
     formData,
@@ -33,12 +33,17 @@ const Appoiment = () => {
     setShowForm,
     setFormData,
     // Functions
+    hydratedAppointments,
     getAvailableTimes,
     handleSubmitForm,
     handleNextStep,
     handlePrevStep,
     resetForm,
     handleCancel,
+
+      //Handle cancel if we can login
+    // handleCancel,
+
     getStatusColor,
     getStatusLabel,
     canProceed,
@@ -490,7 +495,7 @@ const Appoiment = () => {
                                   YOUR APPOINTMENT
                                 </p>
                                 <p className="text-prussianBlue font-bold font-inter text-lg">
-                                  {new Date(formData.date).toLocaleDateString(
+                                  {new Date(formData.date + "T00:00:00").toLocaleDateString(
                                     "en-US",
                                     {
                                       weekday: "long",
@@ -572,9 +577,11 @@ const Appoiment = () => {
                                 exit={{ opacity: 0 }}
                                 className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto"
                               >
-                                {getAvailableTimes().map((time, index) => (
+                                {/*Changed to fetch from the data the available times*/}
+                                {getAvailableTimes()?.map((slot, index) => (
                                   <motion.button
-                                    key={time}
+                                    key={slot.time}
+                                    disabled={!slot.available}
                                     initial={{ opacity: 0, scale: 0.8 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     transition={{
@@ -586,16 +593,20 @@ const Appoiment = () => {
                                     onClick={() =>
                                       setFormData((prev) => ({
                                         ...prev,
-                                        time: time,
+                                        time: slot.time,
                                       }))
                                     }
-                                    className={`p-3 rounded-xl font-semibold transition-all font-inter ${
-                                      formData.time === time
-                                        ? "bg-skyBlue text-prussianBlue shadow-md ring-2 ring-skyBlue/50"
-                                        : "bg-gray-100 text-prussianBlue/70 hover:bg-gray-200"
-                                    }`}
+                                    className={`p-3 rounded-xl font-semibold transition-all font-inter
+                                    ${
+                                        slot.available
+                                            ? formData.time === slot.time
+                                                ? "bg-skyBlue text-prussianBlue shadow-md ring-2 ring-skyBlue/50"
+                                                : "bg-gray-100 text-prussianBlue/70 hover:bg-gray-200 hover:border hover:border-black/30 border border-transparent"
+                                            : "bg-gray-300 text-gray-500 opacity-70 cursor-not-allowed"
+                                    }
+                                      `}
                                   >
-                                    {time}
+                                    {slot.time}
                                   </motion.button>
                                 ))}
                               </motion.div>
@@ -621,7 +632,7 @@ const Appoiment = () => {
                         >
                           <p className="text-prussianBlue font-semibold font-inter">
                             ✓{" "}
-                            {new Date(formData.date).toLocaleDateString(
+                            {new Date(formData.date + "T00:00:00").toLocaleDateString(
                               "en-US",
                               {
                                 weekday: "long",
@@ -899,7 +910,7 @@ const Appoiment = () => {
 
         <div className="w-9/12 md:w-3/4 mx-auto">
           {/* Appointments List or Empty State */}
-          {appointments.length === 0 ? (
+          {hydratedAppointments.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -985,8 +996,8 @@ const Appoiment = () => {
                     Your Appointments
                   </h2>
                   <p className="text-prussianBlue/70 mt-2 font-inter">
-                    You have {appointments.length} appointment
-                    {appointments.length !== 1 ? "s" : ""}
+                    You have {hydratedAppointments.length} appointment
+                    {hydratedAppointments.length !== 1 ? "s" : ""}
                   </p>
                 </div>
                 <motion.button
@@ -1001,13 +1012,15 @@ const Appoiment = () => {
               </div>
 
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {appointments.map((appointment, index) => {
-                  const industry = industries.find(
-                    (i) => i.value === appointment.industry
+
+                {/*Using hydrated appointments. */}
+                {hydratedAppointments.map((appointment, index) => {
+                  const industryObj = industries.find(
+                      (i) => i.value === appointment.industryValue
                   );
                   return (
                     <motion.div
-                      key={appointment.id}
+                      key={appointment._id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
@@ -1015,25 +1028,25 @@ const Appoiment = () => {
                     >
                       <div className="relative h-40 overflow-hidden">
                         <img
-                          src={industry?.image}
-                          alt={industry?.label}
+                          src={industryObj?.image}
+                          alt={industryObj?.label}
                           className="w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 bg-linear-to-t from-black/70 to-transparent" />
                         <div className="absolute bottom-4 left-4 right-4">
                           <h3 className="text-xl font-bold text-white font-inter mb-1">
-                            {industry?.label}
+                            {industryObj?.label}
                           </h3>
                           <p className="text-white/90 text-sm font-inter">
-                            {appointment.service}
+                            {appointment.serviceName}
                           </p>
                         </div>
                         <div
                           className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold font-inter ${getStatusColor(
-                            appointment.status
+                            appointment.appointmentStatus
                           )}`}
                         >
-                          {getStatusLabel(appointment.status)}
+                          {getStatusLabel(appointment.appointmentStatus)}
                         </div>
                       </div>
 
@@ -1041,32 +1054,25 @@ const Appoiment = () => {
                         <div className="flex items-center gap-3 text-prussianBlue">
                           <MapPin className="w-4 h-4 text-skyBlue shrink-0" />
                           <span className="font-semibold font-inter text-sm">
-                            {appointment.location}
+                            {appointment.businessLocation}
                           </span>
                         </div>
                         <div className="flex items-center gap-3 text-prussianBlue">
                           <Calendar className="w-4 h-4 text-skyBlue shrink-0" />
                           <span className="font-inter text-sm">
-                            {new Date(appointment.date).toLocaleDateString(
-                              "en-US",
-                              {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              }
-                            )}
+                            {appointment.displayDate}
                           </span>
                         </div>
                         <div className="flex items-center gap-3 text-prussianBlue">
                           <Clock className="w-4 h-4 text-skyBlue shrink-0" />
                           <span className="font-inter text-sm">
-                            {appointment.time}
+                            {appointment.displayTime.format("HH:mm")}
                           </span>
                         </div>
                         <div className="flex items-center gap-3 text-prussianBlue">
                           <User className="w-4 h-4 text-skyBlue shrink-0" />
                           <span className="font-inter text-sm">
-                            {appointment.staff}
+                            {appointment.staffName}
                           </span>
                         </div>
 
@@ -1075,16 +1081,16 @@ const Appoiment = () => {
                             Contact
                           </p>
                           <p className="text-sm text-prussianBlue font-semibold font-inter">
-                            {appointment.name}
+                            {appointment.customerName}
                           </p>
                           <p className="text-xs text-prussianBlue/70 font-inter">
-                            {appointment.email}
+                            {appointment.customerEmail}
                           </p>
                         </div>
 
-                        {appointment.status !== "cancelled" && (
+                        {appointment.appointmentStatus !== "cancelled" && (
                           <button
-                            onClick={() => handleCancel(appointment.id)}
+                            onClick={() => handleCancel(appointment._id)}
                             className="w-full mt-3 px-4 py-2 bg-red-50 text-red-600 rounded-xl font-semibold hover:bg-red-100 transition-colors border border-red-200 text-sm font-inter"
                           >
                             Cancel
