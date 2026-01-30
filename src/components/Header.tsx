@@ -216,6 +216,7 @@ const Header = () => {
           }`}
         >
           {/* Header Top (Logo and Buttons) */}
+          
           <motion.div className={`w-full flex justify-between items-center `}>
             <img
               src={logo}
@@ -224,11 +225,13 @@ const Header = () => {
             />
 
             {!isScrolled && (
-              <img
-                src={logo}
-                alt="Logo Desktop"
-                className="hidden md:block h-10 w-auto rounded-md"
-              />
+                <Link to="/" aria-label="Go to home">
+      <img
+        src={logo}
+        alt="Logo Desktop"
+        className="hidden md:block h-10 w-auto rounded-md cursor-pointer"
+      />
+    </Link>
             )}
             {/* Desktop Buttons */}
 
@@ -238,17 +241,29 @@ const Header = () => {
                   isScrolled ? "hidden" : "visible"
                 }`}
               >
-                {!user? (
-                    <motion.button
-                        whileHover={{ scale: 1.05, y: -5 }}
-                        transition={{ duration: 0.3, type: "spring", stiffness: 100 }}
-                        className="bg-gray-100 hover:bg-gray-200 px-6 py-3 rounded-full font-inter font-medium text-gray-800 shadow-sm hover:shadow transition-all"
-                    >
-                      <Link to="/login" className="block w-full h-full">
-                        Sign In
-                      </Link>
-                    </motion.button>
-                ) : (
+             {!user ? (
+    <>
+      <motion.button
+          whileHover={{ scale: 1.05, y: -5 }}
+          transition={{ duration: 0.3, type: "spring", stiffness: 100 }}
+          className="bg-gray-100 hover:bg-gray-200 px-6 py-3 rounded-full font-inter font-medium text-gray-800 shadow-sm hover:shadow transition-all"
+      >
+        <Link to="/login" className="block w-full h-full">
+          Sign In
+        </Link>
+      </motion.button>
+      {/* Sign Up */}
+      <motion.button
+        whileHover={{ scale: 1.05, y: -5 }}
+        transition={{ duration: 0.3, type: "spring", stiffness: 100 }}
+        className="bg-prussianBlue hover:bg-prussianBlue/90 text-white px-6 py-3 rounded-full font-inter font-medium shadow-sm hover:shadow transition-all"
+      >
+        <Link to="/sign-up" className="block w-full h-full">
+          Sign Up
+        </Link>
+      </motion.button>
+    </>
+) : (
                     <div className="flex items-center gap-4 flex-wrap">
                       {/* Dashboard — only show if user has a business */}
                       {user.businessId ? (

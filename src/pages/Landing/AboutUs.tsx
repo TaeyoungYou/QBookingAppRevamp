@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import Footer from "../../components/Footer";
 import OrlandoImage from "../../assets/teams/Orlando.png";
+import { Link } from "react-router-dom";
 
 const AboutUs = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -99,9 +100,12 @@ const AboutUs = () => {
                   businesses of all sizes.
                 </p>
               </div>
-              <button className="mt-8 bg-selectiveYellow text-prussianBlue px-8 py-3 rounded-full font-inter text-base font-semibold hover:bg-selectiveYellow/90 transition-colors">
-                Learn more
-              </button>
+               <Link
+  to="/contact-us"
+  className="inline-block mt-8 bg-selectiveYellow text-prussianBlue px-8 py-3 rounded-full font-inter text-base font-semibold hover:bg-selectiveYellow/90 transition-colors"
+>
+  Learn More
+</Link>
             </motion.div>
 
             {/* Right Image */}
@@ -170,9 +174,12 @@ const AboutUs = () => {
                   bookings.
                 </p>
               </div>
-              <button className="mt-8 bg-selectiveYellow text-prussianBlue px-8 py-3 rounded-full font-inter text-base font-semibold hover:bg-selectiveYellow/90 transition-colors">
-                See Features
-              </button>
+               <Link
+  to="/contact-us"
+  className="inline-block mt-8 bg-selectiveYellow text-prussianBlue px-8 py-3 rounded-full font-inter text-base font-semibold hover:bg-selectiveYellow/90 transition-colors"
+>
+  Learn More
+</Link>
             </motion.div>
           </div>
         </div>

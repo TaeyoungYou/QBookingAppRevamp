@@ -4,6 +4,10 @@ import { FaArrowRight, FaCheckCircle, FaTimes } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import Footer from "../../components/Footer";
 import services from "../../data/services.js";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api"; // adjust path if needed
+import { useNavigate } from "react-router-dom";
+
 const Services = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [selectedService, setSelectedService] = useState<any>(null);
@@ -25,6 +29,9 @@ const Services = () => {
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
   }, []);
+
+  const navigate = useNavigate();
+const user = useQuery(api.functions.users.getCurrentUser);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -192,9 +199,20 @@ const Services = () => {
                   </div>
 
                   {/* CTA Buttons */}
-                  <button className="w-full  bg-blueGreen text-body px-8 py-4 rounded-full font-inter text-base font-semibold hover:bg-blueGreen/90 transition-colors">
-                    Get Started
-                  </button>
+<button
+  onClick={() => {
+    if (!user) {
+      navigate("/login");
+    } else {
+      navigate("/appointment");
+    }
+  }}
+  className="w-full bg-blueGreen text-body px-8 py-4 rounded-full font-inter text-base font-semibold hover:bg-blueGreen/90 transition-colors"
+>
+  Get Started
+</button>
+
+
                 </div>
               </motion.div>
             </div>

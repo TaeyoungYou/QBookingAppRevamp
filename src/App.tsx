@@ -17,6 +17,7 @@ import SettingsPage from "./pages/Dashboard/SettingsPage";
 import { useUser } from "./context/UserContext";
 import LoginPage from "./pages/Auth/LoginPage.tsx";
 import SignUpForm from "./components/Auth/SignUpForm.tsx";
+import ScrollToTop from "./components/ScrollToTop.tsx";
 
 function ProtectedRoute({
   children,
@@ -48,6 +49,7 @@ function ProtectedRoute({
 const App = () => {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/pricing" element={<Pricing />} />
