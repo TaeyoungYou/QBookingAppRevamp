@@ -6,10 +6,12 @@ import Footer from "../../components/Footer";
 import OrlandoImage from "../../assets/teams/Orlando.png";
 import { Link } from "react-router-dom";
 
+// About Us landing page composition
 const AboutUs = () => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
+    // Toggle hero title animation based on scroll position
     const handleScroll = () => {
       const scrollTop = window.scrollY;
       setIsScrolled(scrollTop > 50);
@@ -17,6 +19,7 @@ const AboutUs = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+  // Team/member + customer testimonial data for the slider
   const testimonials = [
     {
       quote:
@@ -45,14 +48,14 @@ const AboutUs = () => {
     <section>
       <Header />
 
-      {/* Hero Section with Parallax Background */}
+      {/* Hero section with parallax background */}
       <section
         className="w-full h-[30vh] flex items-center justify-start pt-28 bg-cover bg-center bg-no-repeat relative bg-fixed top-4"
         style={{
           backgroundImage: `url("https://images.unsplash.com/photo-1522273987129-4ca3c41871e2?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80")`,
         }}
       >
-        {/* Overlay */}
+        {/* Dark overlay for text contrast */}
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 w-9/12 md:w-3/4 mx-auto">
           <motion.h1
@@ -70,11 +73,11 @@ const AboutUs = () => {
         </div>
       </section>
 
-      {/* About Us Content */}
+      {/* About Us content */}
       <section className="w-full py-20 px-6 bg-body">
         <div className="w-9/12 md:w-3/4 mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-            {/* Left Content */}
+            {/* Left: copy and primary CTA */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -100,15 +103,15 @@ const AboutUs = () => {
                   businesses of all sizes.
                 </p>
               </div>
-               <Link
-  to="/contact-us"
-  className="inline-block mt-8 bg-selectiveYellow text-prussianBlue px-8 py-3 rounded-full font-inter text-base font-semibold hover:bg-selectiveYellow/90 transition-colors"
->
-  Learn More
-</Link>
+              <Link
+                to="/contact-us"
+                className="inline-block mt-8 bg-selectiveYellow text-prussianBlue px-8 py-3 rounded-full font-inter text-base font-semibold hover:bg-selectiveYellow/90 transition-colors"
+              >
+                Learn More
+              </Link>
             </motion.div>
 
-            {/* Right Image */}
+            {/* Right: illustrative image */}
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -127,11 +130,11 @@ const AboutUs = () => {
         </div>
       </section>
 
-      {/* Section 2: Discover New Destinations (Reversed) */}
+      {/* Section 2: Growth/Scale message with reversed layout */}
       <section className="w-full py-20 px-6 bg-gray-50">
         <div className="w-9/12 md:w-3/4 mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left Image */}
+            {/* Left: supporting image */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -148,7 +151,7 @@ const AboutUs = () => {
               </div>
             </motion.div>
 
-            {/* Right Content */}
+            {/* Right: supporting copy and CTA */}
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -174,25 +177,25 @@ const AboutUs = () => {
                   bookings.
                 </p>
               </div>
-               <Link
-  to="/contact-us"
-  className="inline-block mt-8 bg-selectiveYellow text-prussianBlue px-8 py-3 rounded-full font-inter text-base font-semibold hover:bg-selectiveYellow/90 transition-colors"
->
-  Learn More
-</Link>
+              <Link
+                to="/contact-us"
+                className="inline-block mt-8 bg-selectiveYellow text-prussianBlue px-8 py-3 rounded-full font-inter text-base font-semibold hover:bg-selectiveYellow/90 transition-colors"
+              >
+                Learn More
+              </Link>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Parallax Quote Section */}
+      {/* Parallax quote section */}
       <section
         className="w-full h-[60vh] flex items-center justify-center bg-fixed bg-center bg-cover relative"
         style={{
           backgroundImage: `url("https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=1920&q=80")`,
         }}
       >
-        {/* Overlay */}
+        {/* Overlay for legibility */}
         <div className="absolute inset-0 bg-black/40" />
         <motion.h2
           initial={{ opacity: 0, y: 30 }}
@@ -207,7 +210,7 @@ const AboutUs = () => {
         </motion.h2>
       </section>
 
-      {/* Team Section */}
+      {/* Team section with testimonial carousel */}
       <section className="w-full  py-20 px-6 bg-body ">
         <div className="w-9/12 md:w-3/4 mx-auto">
           <div className="text-center mb-16">
