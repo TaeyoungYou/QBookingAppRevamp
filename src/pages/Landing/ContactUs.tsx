@@ -3,6 +3,7 @@ import { Phone, Mail, MessageSquare, Clock, Check, Send } from "lucide-react";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 
+// Select options for the "Topic" dropdown in the contact form
 const serviceOptions = [
   "In-store booking",
   "Events & pop-ups",
@@ -10,6 +11,7 @@ const serviceOptions = [
   "Partner integration",
 ];
 
+// Primary contact methods shown in the left column
 const contactMethods = [
   {
     icon: Phone,
@@ -25,12 +27,13 @@ const contactMethods = [
   },
 ];
 
+// Contact page layout with hero copy, contact methods, and lead form
 const ContactUs = () => {
   return (
     <div className="bg-body min-h-screen flex flex-col">
       <Header />
 
-      {/* Background Decor */}
+      {/* Background decor: soft blobs to add depth without interfering with content */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-0 left-10 h-96 w-96 rounded-full bg-blueGreen/5 blur-[120px]" />
         <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-skyBlue/10 blur-[120px]" />
@@ -78,7 +81,7 @@ const ContactUs = () => {
                 transition={{ delay: 0.3 }}
                 className="rounded-[32px] border border-slate-100 bg-white p-8 shadow-xl shadow-slate-200/40 relative overflow-hidden"
               >
-                {/* Decorative blob */}
+                {/* Decorative blob for subtle depth */}
                 <div className="absolute top-0 right-0 h-32 w-32 bg-blueGreen/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
 
                 <div className="relative">
@@ -99,6 +102,7 @@ const ContactUs = () => {
                     Choose a time that fits your team and we will walk through
                     onboarding, product fit, or deeper technical details.
                   </p>
+                  {/* Quick interest tags (non-interactive in current version) */}
                   <div className="flex flex-wrap gap-3">
                     {["Live demo", "Custom quote", "Tech support"].map(
                       (label) => (
@@ -120,6 +124,7 @@ const ContactUs = () => {
                 transition={{ delay: 0.4 }}
                 className="grid gap-4"
               >
+                {/* Contact methods list (tel / mailto links) */}
                 {contactMethods.map((method) => (
                   <a
                     key={method.label}
@@ -151,6 +156,7 @@ const ContactUs = () => {
               transition={{ delay: 0.5 }}
               className="rounded-[32px] border border-white bg-white/60 backdrop-blur-xl p-8 sm:p-10 shadow-2xl shadow-slate-200/50"
             >
+              {/* Lead capture form (UI only; no submit handler wired yet) */}
               <form className="space-y-6">
                 <div className="grid gap-6 md:grid-cols-2">
                   <label className="flex flex-col gap-2">
@@ -180,6 +186,7 @@ const ContactUs = () => {
                     <span className="text-sm font-semibold text-prussianBlue">
                       Phone number
                     </span>
+                    {/* Phone input with inline icon */}
                     <div className="relative">
                       <Phone
                         size={16}
@@ -196,6 +203,7 @@ const ContactUs = () => {
                     <span className="text-sm font-semibold text-prussianBlue">
                       Topic
                     </span>
+                    {/* Service topic selector */}
                     <div className="relative">
                       <select className="w-full appearance-none rounded-xl border border-slate-200 bg-white/50 px-4 py-3.5 text-sm outline-none transition focus:border-blueGreen focus:ring-4 focus:ring-blueGreen/10 cursor-pointer">
                         {serviceOptions.map((option) => (
@@ -227,6 +235,7 @@ const ContactUs = () => {
                   <span className="text-sm font-semibold text-prussianBlue">
                     Message
                   </span>
+                  {/* Free-form message for qualification */}
                   <textarea
                     rows={4}
                     placeholder="Describe your current challenges or desired launch date..."
@@ -235,6 +244,7 @@ const ContactUs = () => {
                 </label>
 
                 <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
+                  {/* Lightweight trust cues */}
                   <div className="flex gap-4">
                     <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
                       <MessageSquare size={14} className="text-blueGreen" />
