@@ -6,12 +6,14 @@ import Footer from "../../components/Footer";
 import OrlandoImage from "../../assets/teams/Orlando.png";
 import { Link } from "react-router-dom";
 
-// About Us landing page composition
+// About Us landing page composition and section orchestration
 const AboutUs = () => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     // Toggle hero title animation based on scroll position
+    // This keeps the heading visually present at the top, then fades/moves it
+    // once the user starts scrolling for a cleaner transition.
     const handleScroll = () => {
       const scrollTop = window.scrollY;
       setIsScrolled(scrollTop > 50);
@@ -20,6 +22,7 @@ const AboutUs = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
   // Team/member + customer testimonial data for the slider
+  // Note: one local asset and two remote images for quicker content variety.
   const testimonials = [
     {
       quote:
@@ -49,6 +52,7 @@ const AboutUs = () => {
       <Header />
 
       {/* Hero section with parallax background */}
+      {/* Uses fixed background for depth + overlay for text contrast */}
       <section
         className="w-full h-[30vh] flex items-center justify-start pt-28 bg-cover bg-center bg-no-repeat relative bg-fixed top-4"
         style={{
@@ -74,10 +78,12 @@ const AboutUs = () => {
       </section>
 
       {/* About Us content */}
+      {/* Two-column layout: narrative + visual */}
       <section className="w-full py-20 px-6 bg-body">
         <div className="w-9/12 md:w-3/4 mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
             {/* Left: copy and primary CTA */}
+            {/* Motion adds subtle entrance to the text block */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -112,6 +118,7 @@ const AboutUs = () => {
             </motion.div>
 
             {/* Right: illustrative image */}
+            {/* Slight rotation + hover reset creates a dynamic card feel */}
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -131,10 +138,12 @@ const AboutUs = () => {
       </section>
 
       {/* Section 2: Growth/Scale message with reversed layout */}
+      {/* Reversed layout balances the page rhythm for long-form scroll */}
       <section className="w-full py-20 px-6 bg-gray-50">
         <div className="w-9/12 md:w-3/4 mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left: supporting image */}
+            {/* Order changes on large screens to flip the layout */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -152,6 +161,7 @@ const AboutUs = () => {
             </motion.div>
 
             {/* Right: supporting copy and CTA */}
+            {/* Highlights scalability and operational impact */}
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -189,6 +199,7 @@ const AboutUs = () => {
       </section>
 
       {/* Parallax quote section */}
+      {/* Full-bleed statement to reset attention before the team section */}
       <section
         className="w-full h-[60vh] flex items-center justify-center bg-fixed bg-center bg-cover relative"
         style={{
@@ -211,6 +222,7 @@ const AboutUs = () => {
       </section>
 
       {/* Team section with testimonial carousel */}
+      {/* AnimatedTestimonials handles autoplay + transitions */}
       <section className="w-full  py-20 px-6 bg-body ">
         <div className="w-9/12 md:w-3/4 mx-auto">
           <div className="text-center mb-16">
