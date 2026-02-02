@@ -8,11 +8,13 @@ import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api"; // adjust path if needed
 import { useNavigate } from "react-router-dom";
 
+// Services page with hero, grid, and detail modal
 const Services = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [selectedService, setSelectedService] = useState<any>(null);
 
   useEffect(() => {
+    // Track scroll to hide hero title after the user starts scrolling
     const handleScroll = () => {
       const scrollTop = window.scrollY;
       setIsScrolled(scrollTop > 50);
@@ -21,7 +23,7 @@ const Services = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  //   Close modal on ESC key
+  // Close modal on ESC key for accessibility
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") setSelectedService(null);
@@ -31,9 +33,9 @@ const Services = () => {
   }, []);
 
   const navigate = useNavigate();
-const user = useQuery(api.functions.users.getCurrentUser);
+  const user = useQuery(api.functions.users.getCurrentUser);
 
-  // Prevent body scroll when modal is open
+  // Prevent body scroll when modal is open to keep focus in dialog
   useEffect(() => {
     if (selectedService) {
       document.body.style.overflow = "hidden";
@@ -57,9 +59,9 @@ const user = useQuery(api.functions.users.getCurrentUser);
           backgroundImage: `url("https://images.unsplash.com/photo-1522273987129-4ca3c41871e2?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80")`,
         }}
       >
-        {/* Dark Overlay */}
+        {/* Dark overlay for legibility */}
         <div className="absolute inset-0 bg-black/50" />
-        {/* Content */}
+        {/* Hero title */}
         <div className="relative z-10 w-9/12 md:w-3/4 mx-auto">
           <motion.h1
             initial={{ opacity: 0, x: -50 }}
@@ -76,7 +78,7 @@ const user = useQuery(api.functions.users.getCurrentUser);
         </div>
       </section>
 
-      {/* Services Grid -  */}
+      {/* Services grid */}
       <section className="w-full py-20 px-6 bg-body ">
         <div className="w-9/12 md:w-3/4 mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
@@ -93,7 +95,7 @@ const user = useQuery(api.functions.users.getCurrentUser);
                 }}
                 className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all group"
               >
-                {/* Image */}
+                {/* Service thumbnail */}
                 <div className="h-64 overflow-hidden">
                   <img
                     src={service.image}
@@ -101,7 +103,7 @@ const user = useQuery(api.functions.users.getCurrentUser);
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                   />
                 </div>
-                {/* Content */}
+                {/* Service summary */}
                 <div className="p-8">
                   <h3 className="font-inter text-xl font-semibold text-prussianBlue mb-4">
                     {service.title}
@@ -113,6 +115,7 @@ const user = useQuery(api.functions.users.getCurrentUser);
                     onClick={() => setSelectedService(service)}
                     className="text-skyBlue font-inter text-base inline-flex items-center gap-2 hover:gap-3 transition-all group-hover:text-blueGreen"
                   >
+                    {/* Opens modal with full service details */}
                     Read more <FaArrowRight />
                   </button>
                 </div>
@@ -134,7 +137,7 @@ const user = useQuery(api.functions.users.getCurrentUser);
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-1020"
             />
 
-            {/* Modal Content */}
+            {/* Modal content: service details */}
             <div className="fixed inset-0 z-1020 flex items-center justify-center p-4">
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -144,7 +147,7 @@ const user = useQuery(api.functions.users.getCurrentUser);
                 className="bg-body rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl "
                 onClick={(e) => e.stopPropagation()}
               >
-                {/* Modal Header with Image */}
+                {/* Modal header with image */}
                 <div className="relative h-64">
                   <img
                     src={selectedService.image}
@@ -153,7 +156,7 @@ const user = useQuery(api.functions.users.getCurrentUser);
                   />
                   <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
 
-                  {/* Close Button */}
+                  {/* Close button */}
                   <button
                     onClick={() => setSelectedService(null)}
                     className="absolute top-4 right-4 w-10 h-10 rounded-full bg-body/90 flex items-center justify-center hover:bg-body transition-colors"
@@ -161,19 +164,19 @@ const user = useQuery(api.functions.users.getCurrentUser);
                   >
                     <FaTimes className="text-prussianBlue text-xl" />
                   </button>
-                  {/* Title on Image */}
+                  {/* Title on image */}
                   <h2 className="absolute bottom-6 left-6 font-inter text-3xl sm:text-4xl font-bold text-white">
                     {selectedService.title}
                   </h2>
                 </div>
 
-                {/* Modal Body */}
+                {/* Modal body */}
                 <div className="p-8">
                   {/* Description */}
                   <p className="text-prussianBlue font-inter text-lg leading-relaxed mb-8">
                     {selectedService.description}
                   </p>
-                  {/* Features List */}
+                  {/* Features list */}
                   <div className="mb-8">
                     <h3 className="font-inter text-xl font-semibold text-prussianBlue mb-4">
                       Key Features
@@ -198,19 +201,19 @@ const user = useQuery(api.functions.users.getCurrentUser);
                     </ul>
                   </div>
 
-                  {/* CTA Buttons */}
-<button
-  onClick={() => {
-    if (!user) {
-      navigate("/login");
-    } else {
-      navigate("/appointment");
-    }
-  }}
-  className="w-full bg-blueGreen text-body px-8 py-4 rounded-full font-inter text-base font-semibold hover:bg-blueGreen/90 transition-colors"
->
-  Get Started
-</button>
+                  {/* CTA: route to login if unauthenticated, else appointment */}
+                  <button
+                    onClick={() => {
+                      if (!user) {
+                        navigate("/login");
+                      } else {
+                        navigate("/appointment");
+                      }
+                    }}
+                    className="w-full bg-blueGreen text-body px-8 py-4 rounded-full font-inter text-base font-semibold hover:bg-blueGreen/90 transition-colors"
+                  >
+                    Get Started
+                  </button>
 
 
                 </div>

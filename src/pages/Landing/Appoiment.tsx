@@ -23,6 +23,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Footer from "../../components/Footer";
 import { useEffect } from "react";
 
+// Appointment booking page with hero, modal multi-step form, and appointment list
 const Appoiment = () => {
   const {
     showForm,
@@ -41,15 +42,13 @@ const Appoiment = () => {
     resetForm,
     handleCancel,
 
-      //Handle cancel if we can login
-    // handleCancel,
-
     getStatusColor,
     getStatusLabel,
     canProceed,
   } = useBookingProcess();
 
   useEffect(() => {
+    // Close modal on Escape key for accessibility and quick exit
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") setShowForm(false);
     };
@@ -82,6 +81,7 @@ const Appoiment = () => {
           className="w-9/12 md:w-3/4 mx-auto"
         >
           <div className="max-w-3xl">
+            {/* Word-by-word animation for headline emphasis */}
             <h1 className="font-inter text-4xl sm:text-5xl lg:text-6xl font-bold text-prussianBlue leading-tight mb-6">
               {"Book Your Appointment with Ease"
                 .split(" ")
@@ -97,6 +97,7 @@ const Appoiment = () => {
                   </motion.span>
                 ))}
             </h1>
+            {/* Word-by-word animation for supporting copy */}
             <p className="text-xl text-prussianBlue/70 font-inter leading-relaxed mb-8">
               {"Schedule appointments for restaurants, fitness centers, medical services, spas, and more — all in one seamless experience."
                 .split(" ")
@@ -146,6 +147,7 @@ const Appoiment = () => {
             className="fixed inset-0 z-1020 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
             onClick={resetForm}
           >
+            {/* Dialog container; stopPropagation prevents backdrop click from closing */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -173,6 +175,7 @@ const Appoiment = () => {
 
                 {/* Progress Steps */}
                 <div className=" w-full flex items-center flex-1 ">
+                  {/* Render step dots with progress connectors */}
                   {steps.map((step, index) => (
                     <Fragment key={step.number}>
                       <div className="flex items-center justify-center flex-1">
@@ -186,6 +189,7 @@ const Appoiment = () => {
                                 : "bg-white/20 text-white/60"
                             }`}
                           >
+                            {/* Completed steps show a check icon */}
                             {currentStep > step.number ? (
                               <Check className="w-5 h-5" />
                             ) : (
@@ -234,6 +238,7 @@ const Appoiment = () => {
                       <p className="text-prussianBlue/70 mb-6 font-inter">
                         Select the type of service you're looking for
                       </p>
+                      {/* Industry tiles */}
                       <div className="grid md:grid-cols-3 gap-4">
                         {industries.map((industry) => (
                           <motion.button
@@ -252,6 +257,7 @@ const Appoiment = () => {
                                 : "border-gray-200 hover:border-skyBlue/50 hover:shadow-md"
                             }`}
                           >
+                            {/* Image preview for each industry */}
                             <img
                               src={industry.image}
                               alt={industry.label}
@@ -290,6 +296,7 @@ const Appoiment = () => {
                       <p className="text-prussianBlue/70 mb-6 font-inter">
                         Choose your preferred location
                       </p>
+                      {/* Locations filtered by selected industry */}
                       <div className="grid md:grid-cols-2 gap-4">
                         {locations[formData.industry]?.map(
                           (location, index) => (
@@ -312,6 +319,7 @@ const Appoiment = () => {
                                   : "border-gray-200 hover:border-skyBlue/50 hover:shadow-md"
                               }`}
                             >
+                              {/* Location image + short info */}
                               <div className="relative h-32 overflow-hidden">
                                 <img
                                   src={location.image}
@@ -365,6 +373,7 @@ const Appoiment = () => {
                       <p className="text-prussianBlue/70 mb-6 font-inter">
                         What service do you need?
                       </p>
+                      {/* Services filtered by industry */}
                       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {services[formData.industry]?.map((service, index) => (
                           <motion.button
@@ -386,6 +395,7 @@ const Appoiment = () => {
                                 : "border-gray-200 hover:border-skyBlue/50 hover:shadow-md"
                             }`}
                           >
+                            {/* Service card with duration badge */}
                             <div className="relative h-32 overflow-hidden">
                               <img
                                 src={service.image}
@@ -445,6 +455,7 @@ const Appoiment = () => {
                           animate={{ opacity: 1, y: 0 }}
                           className="bg-linear-to-br from-white to-skyBlue/5 border-2 border-skyBlue/20 rounded-2xl p-6 shadow-lg h-fit"
                         >
+                          {/* Date input and quick visual confirmation */}
                           <div className="flex items-center justify-between mb-4">
                             <label className="flex items-center gap-2 text-base font-bold text-prussianBlue font-inter">
                               <div className="p-2 bg-skyBlue/20 rounded-lg">
@@ -577,7 +588,7 @@ const Appoiment = () => {
                                 exit={{ opacity: 0 }}
                                 className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto"
                               >
-                                {/*Changed to fetch from the data the available times*/}
+                                {/* Render time slots from availability logic */}
                                 {getAvailableTimes()?.map((slot, index) => (
                                   <motion.button
                                     key={slot.time}
@@ -624,6 +635,7 @@ const Appoiment = () => {
                         </div>
                       </div>
 
+                      {/* Confirmation strip once date and time are chosen */}
                       {formData.date && formData.time && (
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
@@ -669,6 +681,7 @@ const Appoiment = () => {
                           <User className="w-6 h-6 text-skyBlue" />
                           Available Staff
                         </h4>
+                        {/* Staff cards filtered by selected industry */}
                         <div className="grid md:grid-cols-3 gap-4">
                           {availableStaff[formData.industry]?.map(
                             (staff, index) => (
@@ -691,6 +704,7 @@ const Appoiment = () => {
                                     : "border-gray-200 hover:border-skyBlue/50 hover:shadow-md"
                                 }`}
                               >
+                                {/* Staff portrait and rating */}
                                 <div className="relative h-32 overflow-hidden">
                                   <img
                                     src={staff.image}
@@ -757,6 +771,7 @@ const Appoiment = () => {
                             <h4 className="font-bold text-prussianBlue mb-4 font-inter text-lg">
                               Your Contact Information
                             </h4>
+                            {/* Collect required contact info for booking confirmation */}
                             <div className="grid md:grid-cols-2 gap-4">
                               <div>
                                 <label className="flex items-center gap-2 text-sm font-semibold text-prussianBlue mb-2 font-inter">
@@ -824,6 +839,7 @@ const Appoiment = () => {
                                   animate={{ opacity: 1, scale: 1 }}
                                   className="mt-6 p-5 bg-skyBlue/10 border border-skyBlue/30 rounded-2xl"
                                 >
+                                  {/* Summary to confirm selections before submit */}
                                   <h5 className="font-bold text-prussianBlue mb-3 font-inter">
                                     Booking Summary
                                   </h5>
@@ -864,6 +880,7 @@ const Appoiment = () => {
 
               {/* Navigation Buttons */}
               <div className="  border-gray-200 p-6 flex justify-between items-center ">
+                {/* Back button disabled on first step */}
                 <button
                   onClick={handlePrevStep}
                   disabled={currentStep === 1}
@@ -876,6 +893,7 @@ const Appoiment = () => {
                   <ChevronLeft className="w-5 h-5" />
                   Previous
                 </button>
+                {/* Next button for steps 1-4; Confirm on final step */}
                 {currentStep < 5 ? (
                   <button
                     onClick={handleNextStep}
@@ -916,6 +934,7 @@ const Appoiment = () => {
               animate={{ opacity: 1, y: 0 }}
               className="max-w-3xl mx-auto"
             >
+              {/* Empty state with animated illustration and quick cues */}
               <div className="bg-body rounded-3xl shadow-md p-12 text-center border border-gray-100">
                 <motion.div
                   animate={{
@@ -969,6 +988,7 @@ const Appoiment = () => {
                   services, or other services.
                 </p>
 
+                {/* Industry thumbnails as visual cues */}
                 <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-8">
                   {industries.map((industry, index) => (
                     <motion.div
@@ -1013,7 +1033,7 @@ const Appoiment = () => {
 
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-                {/*Using hydrated appointments. */}
+                {/* Render hydrated appointments from persistence layer */}
                 {hydratedAppointments.map((appointment, index) => {
                   const industryObj = industries.find(
                       (i) => i.value === appointment.industryValue
@@ -1041,6 +1061,7 @@ const Appoiment = () => {
                             {appointment.serviceName}
                           </p>
                         </div>
+                        {/* Status pill derived from appointment status */}
                         <div
                           className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold font-inter ${getStatusColor(
                             appointment.appointmentStatus
