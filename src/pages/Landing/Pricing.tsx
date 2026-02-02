@@ -3,10 +3,12 @@ import Header from "../../components/Header";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useMemo } from "react";
 import Footer from "../../components/Footer";
+// Pricing page with hero, billing toggle, and tier cards
 const Pricing = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [billing, setBilling] = useState<BillingCycle>("monthly");
   useEffect(() => {
+    // Track scroll position to animate the hero title
     const handleScroll = () => {
       const scrollTop = window.scrollY;
       setIsScrolled(scrollTop > 50);
@@ -16,6 +18,7 @@ const Pricing = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Format numbers into USD currency strings
   const formatPrice = (price: number) => {
     return Intl.NumberFormat("en-US", {
       style: "currency",
@@ -25,6 +28,7 @@ const Pricing = () => {
     }).format(price);
   };
 
+  // Compute tier display copy based on the selected billing cycle
   const tiersForView: Tier[] = useMemo(() => {
     return TIERS.map((tier) => ({
       ...tier,
@@ -35,16 +39,16 @@ const Pricing = () => {
     <section className="">
       <Header />
 
-      {/* Hero Section with Background Image */}
+      {/* Hero section with parallax background image */}
       <section
         className="w-full h-[30vh] flex items-center justify-start pt-28 bg-cover bg-center bg-no-repeat relative bg-fixed top-4"
         style={{
           backgroundImage: `url("https://images.unsplash.com/photo-1522273987129-4ca3c41871e2?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1920&q=80")`,
         }}
       >
-        {/* Dark Overlay */}
+        {/* Dark overlay to improve text contrast */}
         <div className=" absolute inset-0 bg-black/50" />
-        {/* Content */}
+        {/* Hero title */}
         <div className="relative z-10 w-9/12 md:w-3/4 mx-auto">
           <motion.h1
             initial={{ opacity: 0, x: -50 }}
@@ -61,7 +65,7 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* Pricing Content */}
+      {/* Pricing intro and billing toggle */}
       <section className="w-full py-20  bg-body text-center">
         <div className="w-9/12 md:w-3/4 mx-auto">
           <motion.h1 className="text-3xl font-bold tracking-tight text-prussianBlue sm:text-4xl lg:text-5xl">
@@ -71,7 +75,7 @@ const Pricing = () => {
             Choose a plan that fits your business and scales with your bookings.
           </p>
 
-          {/* Billing toggle */}
+          {/* Billing toggle switches monthly/yearly pricing */}
           <div className="w-full mt-8 flex items-center justify-center gap-4">
             <span
               className={`text-base ${
@@ -80,6 +84,7 @@ const Pricing = () => {
             >
               Monthly
             </span>
+            {/* Toggle button uses visual position to indicate state */}
             <button
               type="button"
               aria-label="Toggle billing cycle"
@@ -110,7 +115,7 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* Tiers Section */}
+      {/* Tier cards */}
       <section className="w-full   bg-body">
         <div className="w-9/12 md:w-3/4 mx-auto">
           <AnimatePresence>
@@ -132,6 +137,7 @@ const Pricing = () => {
                       : "border-gray-200 perspective-distant "
                   } bg-white p-6 shadow-sm  hover:shadow-md hover:scale-102 transition-all duration-200 `}
                 >
+                  {/* "Most popular" badge for highlighted plan */}
                   {tier.mostPopular && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-selectiveYellow px-3 py-1 text-xs font-medium text-white">
                       Most popular
@@ -145,6 +151,7 @@ const Pricing = () => {
                       {tier.description}
                     </p>
 
+                    {/* Price uses billing cycle to select monthly vs yearly */}
                     <div className="mb-5 flex items-end gap-1">
                       <span className="text-4xl font-bold text-prussianBlue">
                         {billing === "monthly"
@@ -156,6 +163,7 @@ const Pricing = () => {
                       </span>
                     </div>
 
+                    {/* Feature list with inclusion state */}
                     <ul className="mb-6 space-y-2 text-sm text-gray-700">
                       {tier.features.map((f, i) => (
                         <li key={i} className="flex items-start gap-2">
@@ -181,6 +189,7 @@ const Pricing = () => {
                       ))}
                     </ul>
 
+                    {/* Primary CTA per tier */}
                     <button
                       type="button"
                       className={`${
