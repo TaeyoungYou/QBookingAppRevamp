@@ -24,11 +24,6 @@ type Service = {
 };
 
 
-
-
-
-
-
 export default function SettingsPage() {
   const { isSidebarOpen, setIsSidebarOpen } = useDashboardLayout();
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -56,6 +51,8 @@ const { updateBusiness } = useBusinessQueries();
     return [];
   });
 
+
+  //function to handle save/update business info
   const handleSaveBusiness = async () => {
 
   if (!businessId) return; // businessId should come from your current business data
