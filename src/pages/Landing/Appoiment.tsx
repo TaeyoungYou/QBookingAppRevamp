@@ -41,7 +41,7 @@ const Appoiment = () => {
     resetForm,
     handleCancel,
 
-      //Handle cancel if we can login
+    //Handle cancel if we can login
     // handleCancel,
 
     getStatusColor,
@@ -150,7 +150,7 @@ const Appoiment = () => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-body rounded-3xl shadow-2xl max-w-3xl w-full my-8 h-[90vh] overflow-y-scroll relative"
+              className="bg-body rounded-3xl shadow-2xl max-w-3xl w-full my-8 h-[90vh] overflow-y-scroll relative no-scrollbar"
             >
               {/* Header with Progress */}
               <div className="bg-prussianBlue text-white p-6 rounded-t-3xl ">
@@ -182,8 +182,8 @@ const Appoiment = () => {
                               currentStep > step.number
                                 ? "bg-skyBlue text-prussianBlue"
                                 : currentStep === step.number
-                                ? "bg-skyBlue text-prussianBlue ring-4 ring-skyBlue/30"
-                                : "bg-white/20 text-white/60"
+                                  ? "bg-skyBlue text-prussianBlue ring-4 ring-skyBlue/30"
+                                  : "bg-white/20 text-white/60"
                             }`}
                           >
                             {currentStep > step.number ? (
@@ -345,7 +345,7 @@ const Appoiment = () => {
                                 </motion.div>
                               )}
                             </motion.div>
-                          )
+                          ),
                         )}
                       </div>
                     </motion.div>
@@ -495,15 +495,14 @@ const Appoiment = () => {
                                   YOUR APPOINTMENT
                                 </p>
                                 <p className="text-prussianBlue font-bold font-inter text-lg">
-                                  {new Date(formData.date + "T00:00:00").toLocaleDateString(
-                                    "en-US",
-                                    {
-                                      weekday: "long",
-                                      month: "long",
-                                      day: "numeric",
-                                      year: "numeric",
-                                    }
-                                  )}
+                                  {new Date(
+                                    formData.date + "T00:00:00",
+                                  ).toLocaleDateString("en-US", {
+                                    weekday: "long",
+                                    month: "long",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  })}
                                 </p>
                                 <div className="flex items-center gap-2 mt-2">
                                   <div className="h-1 w-12 bg-skyBlue rounded-full" />
@@ -511,7 +510,7 @@ const Appoiment = () => {
                                     {Math.ceil(
                                       (new Date(formData.date).getTime() -
                                         new Date().getTime()) /
-                                        (1000 * 60 * 60 * 24)
+                                        (1000 * 60 * 60 * 24),
                                     )}{" "}
                                     days from now
                                   </span>
@@ -556,7 +555,7 @@ const Appoiment = () => {
                                         {label}
                                       </motion.button>
                                     );
-                                  }
+                                  },
                                 )}
                               </div>
                             </div>
@@ -598,11 +597,11 @@ const Appoiment = () => {
                                     }
                                     className={`p-3 rounded-xl font-semibold transition-all font-inter
                                     ${
-                                        slot.available
-                                            ? formData.time === slot.time
-                                                ? "bg-skyBlue text-prussianBlue shadow-md ring-2 ring-skyBlue/50"
-                                                : "bg-gray-100 text-prussianBlue/70 hover:bg-gray-200 hover:border hover:border-black/30 border border-transparent"
-                                            : "bg-gray-300 text-gray-500 opacity-70 cursor-not-allowed"
+                                      slot.available
+                                        ? formData.time === slot.time
+                                          ? "bg-skyBlue text-prussianBlue shadow-md ring-2 ring-skyBlue/50"
+                                          : "bg-gray-100 text-prussianBlue/70 hover:bg-gray-200 hover:border hover:border-black/30 border border-transparent"
+                                        : "bg-gray-300 text-gray-500 opacity-70 cursor-not-allowed"
                                     }
                                       `}
                                   >
@@ -632,14 +631,13 @@ const Appoiment = () => {
                         >
                           <p className="text-prussianBlue font-semibold font-inter">
                             ✓{" "}
-                            {new Date(formData.date + "T00:00:00").toLocaleDateString(
-                              "en-US",
-                              {
-                                weekday: "long",
-                                month: "long",
-                                day: "numeric",
-                              }
-                            )}{" "}
+                            {new Date(
+                              formData.date + "T00:00:00",
+                            ).toLocaleDateString("en-US", {
+                              weekday: "long",
+                              month: "long",
+                              day: "numeric",
+                            })}{" "}
                             at {formData.time}
                           </p>
                         </motion.div>
@@ -740,7 +738,7 @@ const Appoiment = () => {
                                   </motion.div>
                                 )}
                               </motion.button>
-                            )
+                            ),
                           )}
                         </div>
                       </div>
@@ -839,7 +837,7 @@ const Appoiment = () => {
                                     <p>
                                       <strong>Date:</strong>{" "}
                                       {new Date(
-                                        formData.date
+                                        formData.date,
                                       ).toLocaleDateString("en-US", {
                                         month: "short",
                                         day: "numeric",
@@ -1012,11 +1010,10 @@ const Appoiment = () => {
               </div>
 
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-
                 {/*Using hydrated appointments. */}
                 {hydratedAppointments.map((appointment, index) => {
                   const industryObj = industries.find(
-                      (i) => i.value === appointment.industryValue
+                    (i) => i.value === appointment.industryValue,
                   );
                   return (
                     <motion.div
@@ -1043,7 +1040,7 @@ const Appoiment = () => {
                         </div>
                         <div
                           className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold font-inter ${getStatusColor(
-                            appointment.appointmentStatus
+                            appointment.appointmentStatus,
                           )}`}
                         >
                           {getStatusLabel(appointment.appointmentStatus)}
