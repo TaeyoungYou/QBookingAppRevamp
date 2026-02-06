@@ -9,6 +9,9 @@ export const useAuthQueries = () => {
     const addBusiness = useMutation(api.functions.businesses.addBusiness);
     const getAllIndustries = useQuery(api.functions.industries.getAllIndustries);
 
+
+
+
     //Staffs
     const staff = useQuery(api.functions.staffs.getStaffByBusiness,
         user?.businessId ? {businessId: user.businessId} : "skip");

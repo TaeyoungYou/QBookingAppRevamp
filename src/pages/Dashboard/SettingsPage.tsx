@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useDashboardLayout } from "./DashboardLayout";
+import {useBusinessQueries} from "../../hooks/useBusinessQueries";
+import { useCurrentUser } from "../../hooks/useBusinessQueries";
 
 type Service = {
   id: string;
@@ -21,9 +23,21 @@ type Service = {
   image?: string;
 };
 
+
 export default function SettingsPage() {
   const { isSidebarOpen, setIsSidebarOpen } = useDashboardLayout();
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+  const [businessInfo, setBusinessInfo] = useState({
+  businessName: "",
+  businessEmail: "",
+  businessPhoneNumber: "",
+  businessAddress: "",
+});
+
+const { businessId } = useCurrentUser();
+const { updateBusiness } = useBusinessQueries();
+
 
   const [services, setServices] = useState<Service[]>(() => {
     const stored = localStorage.getItem("salon-services");
@@ -36,6 +50,35 @@ export default function SettingsPage() {
     }
     return [];
   });
+
+
+  //function to handle save/update business info
+const handleSaveBusiness = async () => {
+  if (!businessId) return; // no business to update
+
+  // Build the patch object with only values that are not empty
+  const fieldsToUpdate: Record<string, string> = {};
+
+  if (businessInfo.businessName) fieldsToUpdate.businessName = businessInfo.businessName;
+  if (businessInfo.businessEmail) fieldsToUpdate.businessEmail = businessInfo.businessEmail;
+  if (businessInfo.businessPhoneNumber) fieldsToUpdate.businessPhoneNumber = businessInfo.businessPhoneNumber;
+  if (businessInfo.businessAddress) fieldsToUpdate.businessAddress = businessInfo.businessAddress;
+
+
+  // If nothing changed, skip the update
+  if (Object.keys(fieldsToUpdate).length === 0) return;
+
+  try {
+    const updated = await updateBusiness({
+      id: businessId,
+      ...fieldsToUpdate, // only include fields that have a value
+    });
+    console.log("Updated business:", updated);
+  } catch (error) {
+    console.error("Failed to update business:", error);
+  }
+};
+
 
   useEffect(() => {
     localStorage.setItem("salon-services", JSON.stringify(services));
@@ -122,6 +165,9 @@ export default function SettingsPage() {
     );
     setEditingService(null);
   };
+  
+
+
 
   const handleCancelEdit = () => setEditingService(null);
 
@@ -143,10 +189,15 @@ export default function SettingsPage() {
             </p>
           </div>
         </div>
-        <button className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#219ebc] to-[#8ecae6] text-white font-semibold shadow-lg shadow-[#219ebc]/30 hover:shadow-xl hover:shadow-[#219ebc]/40 transition-all">
-          <Save size={18} strokeWidth={2.5} />
-          Save Changes
-        </button>
+        <button
+  onClick={handleSaveBusiness}
+  className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#219ebc] to-[#8ecae6] text-white font-semibold shadow-lg shadow-[#219ebc]/30 hover:shadow-xl hover:shadow-[#219ebc]/40 transition-all cursor-pointer"
+>
+  <Save size={18} strokeWidth={2.5} />
+  Save Changes
+</button>
+
+
       </header>
 
       <main className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
@@ -164,35 +215,48 @@ export default function SettingsPage() {
             </p>
           </div>
           <div className="p-6 space-y-4">
+            
             <div>
               <label className="block text-sm font-bold text-[#023047] mb-2">
                 Business Name
               </label>
-              <input
-                type="text"
-                placeholder="Your Business Name"
-                className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"
-              />
+                    <input
+            className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"
+            type="text"
+            placeholder="Your Business Name"
+            value={businessInfo.businessName}
+            onChange={(e) =>
+              setBusinessInfo((prev) => ({ ...prev, businessName: e.target.value }))
+            }
+          />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="block text-sm font-bold text-[#023047] mb-2">
                   Email
                 </label>
-                <input
-                  type="email"
-                  placeholder="business@example.com"
-                  className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"
-                />
+                      <input
+               className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"       
+              type="email"
+              placeholder="business@example.com"
+              value={businessInfo.businessEmail}
+              onChange={(e) =>
+                setBusinessInfo((prev) => ({ ...prev, businessEmail: e.target.value }))
+              }
+            />
               </div>
               <div>
                 <label className="block text-sm font-bold text-[#023047] mb-2">
                   Phone
                 </label>
                 <input
+                className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"
                   type="tel"
                   placeholder="+1 234 567 8900"
-                  className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"
+                  value={businessInfo.businessPhoneNumber}
+                  onChange={(e) =>
+                    setBusinessInfo((prev) => ({ ...prev, businessPhoneNumber: e.target.value }))
+                  }
                 />
               </div>
             </div>
@@ -200,11 +264,15 @@ export default function SettingsPage() {
               <label className="block text-sm font-bold text-[#023047] mb-2">
                 Address
               </label>
-              <input
-                type="text"
-                placeholder="123 Main St, City, State 12345"
-                className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"
-              />
+                          <input
+                  className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"        
+                  type="text"
+                  placeholder="123 Main St, City, State 12345"
+                  value={businessInfo.businessAddress}
+                  onChange={(e) =>
+                    setBusinessInfo((prev) => ({ ...prev, businessAddress: e.target.value }))
+                  }
+                />
             </div>
           </div>
         </motion.section>

@@ -64,3 +64,38 @@ export const getBusinessByIndustryAndName = query({
         return business ?? null;
     },
 });
+
+
+export const updateBusiness = mutation({
+  args: {
+    id: v.id("businesses"), // the business ID to update
+    businessName: v.optional(v.string()),
+    businessAddress: v.optional(v.string()),
+    businessPhoneNumber: v.optional(v.string()),
+    businessEmail: v.optional(v.string()),
+    businessWebsite: v.optional(v.string()),
+    businessTimeZone: v.optional(v.string()),
+    industryId: v.optional(v.id("industries")),
+  },
+  handler: async (ctx, args) => {
+    const { id, ...fieldsToUpdate } = args;
+
+    // Remove undefined fields (so we only patch fields that were actually passed)
+    const patchData: Record<string, any> = {};
+    for (const key in fieldsToUpdate) {
+      if (fieldsToUpdate[key as keyof typeof fieldsToUpdate] !== undefined) {
+        patchData[key] = fieldsToUpdate[key as keyof typeof fieldsToUpdate];
+      }
+    }
+
+    if (Object.keys(patchData).length === 0) {
+      // nothing to update
+      return null;
+    }
+
+    await ctx.db.patch(id, patchData);
+
+    // return the updated document
+    return ctx.db.get(id);
+  },
+});
