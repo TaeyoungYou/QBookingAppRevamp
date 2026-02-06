@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useDashboardLayout } from "./DashboardLayout";
+import {useBusinessQueries} from "../../hooks/useBusinessQueries";
+import { useCurrentUser } from "../../hooks/useBusinessQueries";
 
 type Service = {
   id: string;
@@ -20,6 +22,37 @@ type Service = {
   duration: number;
   image?: string;
 };
+
+
+const [businessInfo, setBusinessInfo] = useState({
+  businessName: "",
+  businessEmail: "",
+  businessPhoneNumber: "",
+  businessAddress: "",
+});
+
+const { businessId } = useCurrentUser();
+const { updateBusiness } = useBusinessQueries();
+
+const handleSaveBusiness = async () => {
+
+  if (!businessId) return; // businessId should come from your current business data
+  try {
+    const updated = await updateBusiness({
+      id: businessId,
+      businessName: businessInfo.businessName,
+      businessEmail: businessInfo.businessEmail,
+      businessPhoneNumber: businessInfo.businessPhoneNumber,
+      businessAddress: businessInfo.businessAddress,
+    });
+    console.log("Updated business:", updated);
+    // optional: show a toast or confirmation message
+  } catch (error) {
+    console.error("Failed to update business:", error);
+  }
+};
+
+
 
 export default function SettingsPage() {
   const { isSidebarOpen, setIsSidebarOpen } = useDashboardLayout();
@@ -122,6 +155,9 @@ export default function SettingsPage() {
     );
     setEditingService(null);
   };
+  
+
+
 
   const handleCancelEdit = () => setEditingService(null);
 
@@ -143,10 +179,14 @@ export default function SettingsPage() {
             </p>
           </div>
         </div>
-        <button className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#219ebc] to-[#8ecae6] text-white font-semibold shadow-lg shadow-[#219ebc]/30 hover:shadow-xl hover:shadow-[#219ebc]/40 transition-all">
-          <Save size={18} strokeWidth={2.5} />
-          Save Changes
-        </button>
+            <button
+        onClick={handleSaveBusiness}
+        className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#219ebc] to-[#8ecae6] text-white font-semibold shadow-lg shadow-[#219ebc]/30 hover:shadow-xl hover:shadow-[#219ebc]/40 transition-all"
+      >
+        <Save size={18} strokeWidth={2.5} />
+        Save Changes
+      </button>
+
       </header>
 
       <main className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
@@ -168,22 +208,28 @@ export default function SettingsPage() {
               <label className="block text-sm font-bold text-[#023047] mb-2">
                 Business Name
               </label>
-              <input
-                type="text"
-                placeholder="Your Business Name"
-                className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"
-              />
+                    <input
+            type="text"
+            placeholder="Your Business Name"
+            value={businessInfo.businessName}
+            onChange={(e) =>
+              setBusinessInfo((prev) => ({ ...prev, businessName: e.target.value }))
+            }
+          />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="block text-sm font-bold text-[#023047] mb-2">
                   Email
                 </label>
-                <input
-                  type="email"
-                  placeholder="business@example.com"
-                  className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"
-                />
+                      <input
+              type="email"
+              placeholder="business@example.com"
+              value={businessInfo.businessEmail}
+              onChange={(e) =>
+                setBusinessInfo((prev) => ({ ...prev, businessEmail: e.target.value }))
+              }
+            />
               </div>
               <div>
                 <label className="block text-sm font-bold text-[#023047] mb-2">
@@ -192,7 +238,10 @@ export default function SettingsPage() {
                 <input
                   type="tel"
                   placeholder="+1 234 567 8900"
-                  className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"
+                  value={businessInfo.businessPhoneNumber}
+                  onChange={(e) =>
+                    setBusinessInfo((prev) => ({ ...prev, businessPhoneNumber: e.target.value }))
+                  }
                 />
               </div>
             </div>
@@ -200,11 +249,14 @@ export default function SettingsPage() {
               <label className="block text-sm font-bold text-[#023047] mb-2">
                 Address
               </label>
-              <input
-                type="text"
-                placeholder="123 Main St, City, State 12345"
-                className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"
-              />
+                          <input
+                  type="text"
+                  placeholder="123 Main St, City, State 12345"
+                  value={businessInfo.businessAddress}
+                  onChange={(e) =>
+                    setBusinessInfo((prev) => ({ ...prev, businessAddress: e.target.value }))
+                  }
+                />
             </div>
           </div>
         </motion.section>
