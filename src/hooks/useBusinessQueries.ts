@@ -7,14 +7,16 @@ export const useCurrentUser = () => {
   return { user, businessId: user?.businessId };
 };
 
+
+
 export const useBusinessQueries = () => {
-  const businesses = useQuery(api.functions.businesses.getBusinesses);
+  const getbusinesses = useQuery(api.functions.businesses.getBusinesses);
   const addBusiness = useMutation(api.functions.businesses.addBusiness);
   const updateBusiness = useMutation(api.functions.businesses.updateBusiness);
     
   return {
     addBusiness,
-    businesses,
+    getbusinesses,
     updateBusiness,
     
   }
