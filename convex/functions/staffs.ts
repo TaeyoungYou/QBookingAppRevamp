@@ -12,6 +12,7 @@ export const addStaff = mutation({
         bio: v.string(),
         image: v.optional(v.string()),
         rating: v.number(),
+        status: v.optional(v.string()),
         email: v.optional(v.string())
     },
     handler: async (ctx, args) => {

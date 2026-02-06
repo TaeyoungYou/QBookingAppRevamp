@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Menu,
   UserPlus,
@@ -12,6 +12,7 @@ import {
 import { useDashboardLayout } from "./DashboardLayout";
 import { useStaffDirectory } from "../../context/StaffContext";
 import {useAuthQueries} from "../../hooks/useAuthQueries.ts";
+import type { Id } from "../../../convex/_generated/dataModel";
 
 const roles = [
   "Lead Nail Artist",
@@ -31,16 +32,14 @@ const getInitials = (name: string) =>
     .toUpperCase();
 
 
+
+    
 export default function StaffManagementPage() {
   const { isSidebarOpen, setIsSidebarOpen } = useDashboardLayout();
 
-  const {staff, addStaff, user
-  //  removeStaff
-  } = useAuthQueries();
-  //staff
+  const {staff, addStaff, user, removeStaff} = useAuthQueries();
+  
   const {activateStaff } = useStaffDirectory();
-
-
 
   const [form, setForm] = useState({
     name: "",
@@ -48,6 +47,14 @@ export default function StaffManagementPage() {
     email: "",
     phone: "",
   });
+
+const [staffToRemove, setStaffToRemove] = useState<{
+  id: Id<"staff">;
+  name: string;
+} | null>(null);
+
+
+
   const [note, setNote] = useState("");
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -67,6 +74,7 @@ export default function StaffManagementPage() {
       // phone: form.phone.trim() || "(not provided)",
       bio: note,
       rating: 100,
+      status: "invited",                                      // Set initial status to "invited" until we can send email for activation
       businessId: user?.businessId
     });
 
@@ -199,7 +207,7 @@ export default function StaffManagementPage() {
                       className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-600 border border-emerald-200"
                     >
                       <ShieldCheck size={14} />
-                      Activate
+                      Pending Activation
                     </button>
                   ) : (
                     <span className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-600 border border-blue-200">
@@ -207,13 +215,16 @@ export default function StaffManagementPage() {
                       Active
                     </span>
                   )}
-                  <button
-                    // onClick={() => removeStaff(member._id)}
+                            <button
+                    onClick={() =>
+                      setStaffToRemove({ id: member._id, name: member.name })
+                    }
                     className="inline-flex items-center gap-1 rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-500 hover:bg-rose-50"
                   >
                     <UserMinus size={14} />
                     Remove
                   </button>
+
                 </div>
               </motion.div>
             ))}
@@ -314,6 +325,55 @@ export default function StaffManagementPage() {
           </section>
         </div>
       </main>
+      <AnimatePresence>
+  {staffToRemove && (
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl"
+      >
+        <h2 className="text-lg font-bold text-slate-900">
+          Remove staff member?
+        </h2>
+
+        <p className="mt-2 text-sm text-slate-500">
+          Are you sure you want to remove{" "}
+          <span className="font-semibold text-slate-700">
+            {staffToRemove.name}
+          </span>{" "}
+          from this business?
+        </p>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            onClick={() => setStaffToRemove(null)}
+            className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100"
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={() => {
+              removeStaff({ id: staffToRemove.id });
+              setStaffToRemove(null);
+            }}
+            className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
+          >
+            Remove
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
+
     </div>
   );
 }
