@@ -23,6 +23,7 @@ import hero1 from "../../assets/home/hero_p1.avif";
 import hero2 from "../../assets/home/hero_p2.avif";
 import hero3 from "../../assets/home/hero_p3.avif";
 
+// KPI highlights displayed in the achievements section
 const achievements = [
   { number: "2 min", label: "Average booking time", icon: Clock },
   { number: "99.9%", label: "Platform uptime", icon: Shield },
@@ -32,6 +33,7 @@ const achievements = [
   { number: "0", label: "Setup fees", icon: CheckCircle },
 ];
 
+// Industry cards displayed in the "Industries We Serve" section
 const industries = [
   {
     name: "Salons & Spas",
@@ -77,6 +79,7 @@ const industries = [
   },
 ];
 
+// Core feature callouts shown in the features section
 const features = [
   {
     icon: Calendar,
@@ -101,6 +104,7 @@ const features = [
   },
 ];
 
+// Home landing page layout: hero, features, achievements, industries, CTA
 const Home = () => {
   return (
     <div className="bg-body">
@@ -108,14 +112,14 @@ const Home = () => {
 
       {/* Hero Section */}
       <section className="relative w-full min-h-screen pt-32 md:pt-40 pb-20 overflow-hidden">
-        {/* Background decorations */}
+        {/* Background decorations for depth behind hero content */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-20 left-10 h-96 w-96 rounded-full bg-blueGreen/5 blur-[120px]" />
           <div className="absolute bottom-20 right-0 h-96 w-96 rounded-full bg-skyBlue/10 blur-[120px]" />
         </div>
 
         <div className="relative z-10 w-9/12 md:w-3/4 mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Left Content */}
+          {/* Left content: headline, value prop, and primary CTAs */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -132,6 +136,7 @@ const Home = () => {
               Your Booking Solution
             </motion.div>
 
+            {/* Main hero headline with gradient emphasis */}
             <h1 className="font-inter text-4xl sm:text-5xl lg:text-6xl font-bold text-prussianBlue leading-tight mb-6">
               Elevate your{" "}
               <span className="text-transparent bg-clip-text bg-linear-to-r from-blueGreen to-skyBlue">
@@ -140,12 +145,14 @@ const Home = () => {
               and reservations
             </h1>
 
+            {/* Supporting copy clarifying audience and value */}
             <p className="text-prussianBlue/70 font-inter text-lg mb-8 leading-relaxed">
               Every appointment and reservation we power is a commitment to
               enhancing your client experience across salons, spas, and
               restaurants — keeping operations seamless.
             </p>
 
+            {/* Primary and secondary CTAs */}
             <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
               <motion.div whileHover={{ y: -5 }} whileTap={{ scale: 0.95 }}>
                 <Link
@@ -168,7 +175,7 @@ const Home = () => {
             </div>
           </motion.div>
 
-          {/* Right Images */}
+          {/* Right images: stacked photo grid to reinforce product context */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -238,6 +245,7 @@ const Home = () => {
             </p>
           </motion.div>
 
+          {/* Feature cards */}
           <div className="grid md:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <motion.div
@@ -249,6 +257,7 @@ const Home = () => {
                 whileHover={{ y: -10 }}
                 className="relative rounded-3xl border border-slate-100 bg-white p-8 shadow-lg shadow-slate-200/40 hover:shadow-2xl transition-all group"
               >
+                {/* Icon badge with gradient */}
                 <div
                   className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-linear-to-br ${feature.color} text-white mb-6 shadow-lg group-hover:scale-110 transition-transform`}
                 >
@@ -286,6 +295,7 @@ const Home = () => {
             </p>
           </motion.div>
 
+          {/* Achievement tiles */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {achievements.map((achievement, index) => (
               <motion.div
@@ -336,6 +346,7 @@ const Home = () => {
             </p>
           </motion.div>
 
+          {/* Industry cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {industries.map((industry, index) => (
               <motion.div
@@ -405,20 +416,24 @@ const Home = () => {
           transition={{ duration: 0.6 }}
           className="relative z-10 w-9/12 md:w-3/4 mx-auto text-center"
         >
+          {/* CTA badge */}
           <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-semibold text-white mb-6 border border-white/30 backdrop-blur-sm">
             <Sparkles size={16} />
             Join the Revolution
           </div>
 
+          {/* CTA headline */}
           <h2 className="font-inter text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
             Ready to transform your booking experience?
           </h2>
 
+          {/* CTA supporting copy */}
           <p className="text-white/90 font-inter text-lg max-w-3xl mx-auto mb-10 leading-relaxed">
             Join thousands of businesses worldwide who trust our platform to
             manage their appointments and reservations seamlessly.
           </p>
 
+          {/* CTA buttons */}
           <div className="flex flex-wrap gap-4 justify-center">
             <motion.div whileHover={{ y: -5 }} whileTap={{ scale: 0.95 }}>
               <Link
