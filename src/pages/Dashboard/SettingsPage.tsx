@@ -15,6 +15,7 @@ import { useDashboardLayout } from "./DashboardLayout";
 import {useBusinessQueries} from "../../hooks/useBusinessQueries";
 import { useCurrentUser } from "../../hooks/useBusinessQueries";
 
+
 type Service = {
   id: string;
   name: string;
@@ -28,16 +29,19 @@ export default function SettingsPage() {
   const { isSidebarOpen, setIsSidebarOpen } = useDashboardLayout();
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
+
+
+const { businessId } = useCurrentUser();
+const { updateBusiness } = useBusinessQueries();
+
+
   const [businessInfo, setBusinessInfo] = useState({
   businessName: "",
   businessEmail: "",
   businessPhoneNumber: "",
   businessAddress: "",
+  businessWebsite:""
 });
-
-const { businessId } = useCurrentUser();
-const { updateBusiness } = useBusinessQueries();
-
 
   const [services, setServices] = useState<Service[]>(() => {
     const stored = localStorage.getItem("salon-services");
@@ -53,19 +57,27 @@ const { updateBusiness } = useBusinessQueries();
 
 
   //function to handle save/update business info
-  const handleSaveBusiness = async () => {
+const handleSaveBusiness = async () => {
+  if (!businessId) return; // no business to update
 
-  if (!businessId) return; // businessId should come from your current business data
+  // Build the patch object with only values that are not empty
+  const fieldsToUpdate: Record<string, string> = {};
+
+  if (businessInfo.businessName) fieldsToUpdate.businessName = businessInfo.businessName;
+  if (businessInfo.businessEmail) fieldsToUpdate.businessEmail = businessInfo.businessEmail;
+  if (businessInfo.businessPhoneNumber) fieldsToUpdate.businessPhoneNumber = businessInfo.businessPhoneNumber;
+  if (businessInfo.businessAddress) fieldsToUpdate.businessAddress = businessInfo.businessAddress;
+  if (businessInfo.businessWebsite) fieldsToUpdate.businessWebsite = businessInfo.businessWebsite;
+
+  // If nothing changed, skip the update
+  if (Object.keys(fieldsToUpdate).length === 0) return;
+
   try {
     const updated = await updateBusiness({
       id: businessId,
-      businessName: businessInfo.businessName,
-      businessEmail: businessInfo.businessEmail,
-      businessPhoneNumber: businessInfo.businessPhoneNumber,
-      businessAddress: businessInfo.businessAddress,
+      ...fieldsToUpdate, // only include fields that have a value
     });
     console.log("Updated business:", updated);
-    // optional: show a toast or confirmation message
   } catch (error) {
     console.error("Failed to update business:", error);
   }
@@ -205,67 +217,87 @@ const { updateBusiness } = useBusinessQueries();
               Update your business details and contact info.
             </p>
           </div>
-          <div className="p-6 space-y-4">
-            
-            <div>
-              <label className="block text-sm font-bold text-[#023047] mb-2">
-                Business Name
-              </label>
-                    <input
-            className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"
-            type="text"
-            placeholder="Your Business Name"
-            value={businessInfo.businessName}
-            onChange={(e) =>
-              setBusinessInfo((prev) => ({ ...prev, businessName: e.target.value }))
-            }
-          />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-sm font-bold text-[#023047] mb-2">
-                  Email
-                </label>
-                      <input
-               className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"       
-              type="email"
-              placeholder="business@example.com"
-              value={businessInfo.businessEmail}
-              onChange={(e) =>
-                setBusinessInfo((prev) => ({ ...prev, businessEmail: e.target.value }))
-              }
-            />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-[#023047] mb-2">
-                  Phone
-                </label>
-                <input
-                className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"
-                  type="tel"
-                  placeholder="+1 234 567 8900"
-                  value={businessInfo.businessPhoneNumber}
-                  onChange={(e) =>
-                    setBusinessInfo((prev) => ({ ...prev, businessPhoneNumber: e.target.value }))
-                  }
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-[#023047] mb-2">
-                Address
-              </label>
-                          <input
-                  className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"        
-                  type="text"
-                  placeholder="123 Main St, City, State 12345"
-                  value={businessInfo.businessAddress}
-                  onChange={(e) =>
-                    setBusinessInfo((prev) => ({ ...prev, businessAddress: e.target.value }))
-                  }
-                />
-            </div>
-          </div>
+    <div className="p-6 space-y-4">
+  {/* Business Name */}
+  <div>
+    <label className="block text-sm font-bold text-[#023047] mb-2">
+      Business Name
+    </label>
+    <input
+      className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"
+      type="text"
+      placeholder="Your Business Name"
+      value={businessInfo.businessName}
+      onChange={(e) =>
+        setBusinessInfo((prev) => ({ ...prev, businessName: e.target.value }))
+      }
+    />
+  </div>
+
+  {/* Email and Phone */}
+  <div className="grid gap-4 sm:grid-cols-2">
+    <div>
+      <label className="block text-sm font-bold text-[#023047] mb-2">
+        Email
+      </label>
+      <input
+        className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"
+        type="email"
+        placeholder="business@example.com"
+        value={businessInfo.businessEmail}
+        onChange={(e) =>
+          setBusinessInfo((prev) => ({ ...prev, businessEmail: e.target.value }))
+        }
+      />
+    </div>
+    <div>
+      <label className="block text-sm font-bold text-[#023047] mb-2">
+        Phone
+      </label>
+      <input
+        className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"
+        type="tel"
+        placeholder="+1 234 567 8900"
+        value={businessInfo.businessPhoneNumber}
+        onChange={(e) =>
+          setBusinessInfo((prev) => ({ ...prev, businessPhoneNumber: e.target.value }))
+        }
+      />
+    </div>
+  </div>
+
+  {/* Address */}
+  <div>
+    <label className="block text-sm font-bold text-[#023047] mb-2">
+      Address
+    </label>
+    <input
+      className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"
+      type="text"
+      placeholder="123 Main St, City, State 12345"
+      value={businessInfo.businessAddress}
+      onChange={(e) =>
+        setBusinessInfo((prev) => ({ ...prev, businessAddress: e.target.value }))
+      }
+    />
+  </div>
+
+  {/* Website URL */}
+  <div>
+    <label className="block text-sm font-bold text-[#023047] mb-2">
+      Website URL (Optional)
+    </label>
+    <input
+      className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"
+      type="text"
+      placeholder="https://yourbusiness.com"
+      value={businessInfo.businessWebsite || ""}
+      onChange={(e) =>
+        setBusinessInfo((prev) => ({ ...prev, businessWebsite: e.target.value }))
+      }
+    />
+  </div>
+</div>
         </motion.section>
 
         <motion.section
