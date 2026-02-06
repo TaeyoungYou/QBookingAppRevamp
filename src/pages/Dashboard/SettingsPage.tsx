@@ -24,7 +24,16 @@ type Service = {
 };
 
 
-const [businessInfo, setBusinessInfo] = useState({
+
+
+
+
+
+export default function SettingsPage() {
+  const { isSidebarOpen, setIsSidebarOpen } = useDashboardLayout();
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+  const [businessInfo, setBusinessInfo] = useState({
   businessName: "",
   businessEmail: "",
   businessPhoneNumber: "",
@@ -34,7 +43,20 @@ const [businessInfo, setBusinessInfo] = useState({
 const { businessId } = useCurrentUser();
 const { updateBusiness } = useBusinessQueries();
 
-const handleSaveBusiness = async () => {
+
+  const [services, setServices] = useState<Service[]>(() => {
+    const stored = localStorage.getItem("salon-services");
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
+
+  const handleSaveBusiness = async () => {
 
   if (!businessId) return; // businessId should come from your current business data
   try {
@@ -51,24 +73,6 @@ const handleSaveBusiness = async () => {
     console.error("Failed to update business:", error);
   }
 };
-
-
-
-export default function SettingsPage() {
-  const { isSidebarOpen, setIsSidebarOpen } = useDashboardLayout();
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-
-  const [services, setServices] = useState<Service[]>(() => {
-    const stored = localStorage.getItem("salon-services");
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch {
-        return [];
-      }
-    }
-    return [];
-  });
 
   useEffect(() => {
     localStorage.setItem("salon-services", JSON.stringify(services));
