@@ -183,13 +183,14 @@ const { updateBusiness } = useBusinessQueries();
             </p>
           </div>
         </div>
-            <button
-        onClick={handleSaveBusiness}
-        className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#219ebc] to-[#8ecae6] text-white font-semibold shadow-lg shadow-[#219ebc]/30 hover:shadow-xl hover:shadow-[#219ebc]/40 transition-all"
-      >
-        <Save size={18} strokeWidth={2.5} />
-        Save Changes
-      </button>
+        <button
+  onClick={handleSaveBusiness}
+  className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#219ebc] to-[#8ecae6] text-white font-semibold shadow-lg shadow-[#219ebc]/30 hover:shadow-xl hover:shadow-[#219ebc]/40 transition-all cursor-pointer"
+>
+  <Save size={18} strokeWidth={2.5} />
+  Save Changes
+</button>
+
 
       </header>
 
@@ -208,11 +209,13 @@ const { updateBusiness } = useBusinessQueries();
             </p>
           </div>
           <div className="p-6 space-y-4">
+            
             <div>
               <label className="block text-sm font-bold text-[#023047] mb-2">
                 Business Name
               </label>
                     <input
+            className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"
             type="text"
             placeholder="Your Business Name"
             value={businessInfo.businessName}
@@ -227,6 +230,7 @@ const { updateBusiness } = useBusinessQueries();
                   Email
                 </label>
                       <input
+               className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"       
               type="email"
               placeholder="business@example.com"
               value={businessInfo.businessEmail}
@@ -240,6 +244,7 @@ const { updateBusiness } = useBusinessQueries();
                   Phone
                 </label>
                 <input
+                className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"
                   type="tel"
                   placeholder="+1 234 567 8900"
                   value={businessInfo.businessPhoneNumber}
@@ -254,6 +259,7 @@ const { updateBusiness } = useBusinessQueries();
                 Address
               </label>
                           <input
+                  className="w-full px-4 py-3 bg-white border border-[#8ecae6] rounded-xl text-[#023047] placeholder-[#023047]/50 focus:outline-none focus:border-[#219ebc] focus:ring-2 focus:ring-[#219ebc]/20 transition-all"        
                   type="text"
                   placeholder="123 Main St, City, State 12345"
                   value={businessInfo.businessAddress}
