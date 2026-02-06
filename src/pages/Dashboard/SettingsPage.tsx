@@ -53,23 +53,32 @@ const { updateBusiness } = useBusinessQueries();
 
 
   //function to handle save/update business info
-  const handleSaveBusiness = async () => {
+const handleSaveBusiness = async () => {
+  if (!businessId) return; // no business to update
 
-  if (!businessId) return; // businessId should come from your current business data
+  // Build the patch object with only values that are not empty
+  const fieldsToUpdate: Record<string, string> = {};
+
+  if (businessInfo.businessName) fieldsToUpdate.businessName = businessInfo.businessName;
+  if (businessInfo.businessEmail) fieldsToUpdate.businessEmail = businessInfo.businessEmail;
+  if (businessInfo.businessPhoneNumber) fieldsToUpdate.businessPhoneNumber = businessInfo.businessPhoneNumber;
+  if (businessInfo.businessAddress) fieldsToUpdate.businessAddress = businessInfo.businessAddress;
+
+
+  // If nothing changed, skip the update
+  if (Object.keys(fieldsToUpdate).length === 0) return;
+
   try {
     const updated = await updateBusiness({
       id: businessId,
-      businessName: businessInfo.businessName,
-      businessEmail: businessInfo.businessEmail,
-      businessPhoneNumber: businessInfo.businessPhoneNumber,
-      businessAddress: businessInfo.businessAddress,
+      ...fieldsToUpdate, // only include fields that have a value
     });
     console.log("Updated business:", updated);
-    // optional: show a toast or confirmation message
   } catch (error) {
     console.error("Failed to update business:", error);
   }
 };
+
 
   useEffect(() => {
     localStorage.setItem("salon-services", JSON.stringify(services));
