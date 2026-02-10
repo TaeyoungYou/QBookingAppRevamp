@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
-import {useState} from "react";
+import {useState, useEffect, useRef} from "react";
 import {useAuthQueries} from "../../hooks/useAuthQueries.ts";
-import {useBusinessQueries} from "../../hooks/useBusinessQueries.ts";
+import {useBusinessSearch} from "../../hooks/useBusinessQueries.ts";
 import type {Id} from "../../../convex/_generated/dataModel";
 
 
@@ -16,9 +16,35 @@ const CompleteProfile = ({user, signOut}) => {
         addStaff
     } = useAuthQueries();
 
-    const { getbusinesses } = useBusinessQueries();
-
     const [userStatus, setUserStatus] = useState(user?.userStatus || "");
+    const [businessSearch, setBusinessSearch] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [selectedBusiness, setSelectedBusiness] = useState<{_id: Id<"businesses">, businessName: string} | null>(null);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const searchRef = useRef<HTMLDivElement>(null);
+    
+    const searchResults = useBusinessSearch(debouncedSearch);
+
+    // Debounce search input - wait 500ms after user stops typing
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(businessSearch);
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [businessSearch]);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+                setShowDropdown(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -59,15 +85,13 @@ const CompleteProfile = ({user, signOut}) => {
 
             // 2. Create staff profile if employee
             if (isEmployee) {
-                const selectedBusinessId = formData.get("businessId") as Id<"businesses">;
-                
-                if (!selectedBusinessId) {
+                if (!selectedBusiness) {
                     alert("Please select a business");
                     return;
                 }
                 
                 await addStaff({
-                    businessId: selectedBusinessId,
+                    businessId: selectedBusiness._id,
                     name: user.name || "Staff Member",
                     role: formData.get("role") as string || "Staff",
                     bio: formData.get("bio") as string || "",
@@ -77,7 +101,7 @@ const CompleteProfile = ({user, signOut}) => {
                 });
                 
                 // Set businessId for employee user profile
-                businessId = selectedBusinessId;
+                businessId = selectedBusiness._id;
             }
 
             // 3. Always update user profile
@@ -258,56 +282,85 @@ const CompleteProfile = ({user, signOut}) => {
 
                                                 {/* Business selector for employees */}
                                                 {userStatus === "employee" && (
-                                                    <div className="mb-6">
+                                                    <div className="mb-6" ref={searchRef}>
                                                         <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                                            Select Your Business <span className="text-red-500">*</span>
+                                                            Search Your Business <span className="text-red-500">*</span>
                                                         </label>
-                                                        {(() => {
-                                                            const businesses = getbusinesses;
-
-                                                            // Loading state
-                                                            if (businesses === undefined) {
-                                                                return (
-                                                                    <div className="w-full px-5 py-4 rounded-xl border border-gray-300 bg-gray-50 text-gray-500">
-                                                                        Loading businesses...
+                                                        <div className="relative">
+                                                            <input
+                                                                type="text"
+                                                                value={selectedBusiness ? selectedBusiness.businessName : businessSearch}
+                                                                onChange={(e) => {
+                                                                    setBusinessSearch(e.target.value);
+                                                                    setSelectedBusiness(null);
+                                                                    setShowDropdown(true);
+                                                                }}
+                                                                onFocus={() => setShowDropdown(true)}
+                                                                placeholder="Start typing business name..."
+                                                                className="w-full px-5 py-4 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all outline-none"
+                                                                required
+                                                            />
+                                                            
+                                                            {/* Dropdown Results */}
+                                                            {showDropdown && businessSearch && !selectedBusiness && (
+                                                                <div className="absolute z-10 w-full mt-2 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                                                                    {searchResults === undefined ? (
+                                                                        <div className="px-5 py-4 text-gray-500">
+                                                                            Searching...
+                                                                        </div>
+                                                                    ) : searchResults && searchResults.length > 0 ? (
+                                                                        searchResults.map((business) => (
+                                                                            <div
+                                                                                key={business._id}
+                                                                                onClick={() => {
+                                                                                    setSelectedBusiness(business);
+                                                                                    setBusinessSearch(business.businessName);
+                                                                                    setShowDropdown(false);
+                                                                                }}
+                                                                                className="px-5 py-3 hover:bg-indigo-50 cursor-pointer transition-colors border-b border-gray-100 last:border-b-0"
+                                                                            >
+                                                                                <div className="font-medium text-gray-800">
+                                                                                    {business.businessName}
+                                                                                </div>
+                                                                                <div className="text-sm text-gray-500">
+                                                                                    {business.businessAddress}
+                                                                                </div>
+                                                                            </div>
+                                                                        ))
+                                                                    ) : (
+                                                                        <div className="px-5 py-4 text-gray-500">
+                                                                            No businesses found. Try a different search term.
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                            
+                                                            {/* Selected Business Display */}
+                                                            {selectedBusiness && (
+                                                                <div className="mt-2 px-4 py-3 bg-indigo-50 border border-indigo-200 rounded-lg flex items-center justify-between">
+                                                                    <div>
+                                                                        <div className="font-medium text-indigo-900">
+                                                                            {selectedBusiness.businessName}
+                                                                        </div>
+                                                                        <div className="text-sm text-indigo-600">
+                                                                            Selected
+                                                                        </div>
                                                                     </div>
-                                                                );
-                                                            }
-
-                                                            // Empty state
-                                                            if (!businesses || businesses.length === 0) {
-                                                                return (
-                                                                    <div className="w-full px-5 py-4 rounded-xl border border-red-300 bg-red-50 text-red-700">
-                                                                        No businesses found. Please contact your employer.
-                                                                    </div>
-                                                                );
-                                                            }
-
-                                                            return (
-                                                                <select
-                                                                    name="businessId"
-                                                                    required
-                                                                    defaultValue=""
-                                                                    className="w-full px-5 py-4 rounded-xl border border-gray-300
-                                                                        focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100
-                                                                        transition-all outline-none bg-white cursor-pointer
-                                                                        appearance-none
-                                                                        bg-[url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 20 20%22%3E%3Cpath stroke=%22%236b7280%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22m6 8 4 4 4-4%22/%3E%3C/svg%3E')]
-                                                                        bg-no-repeat bg-[right_1rem_center] bg-[length:12px]"
-                                                                >
-                                                                    <option value="" disabled>
-                                                                        — Select a business —
-                                                                    </option>
-                                                                    {businesses.map((business) => (
-                                                                        <option key={business._id} value={business._id}>
-                                                                            {business.businessName}
-                                                                        </option>
-                                                                    ))}
-                                                                </select>
-                                                            );
-                                                        })()}
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            setSelectedBusiness(null);
+                                                                            setBusinessSearch("");
+                                                                        }}
+                                                                        className="text-indigo-600 hover:text-indigo-800 font-medium"
+                                                                    >
+                                                                        Change
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                         <p className="mt-2 text-sm text-gray-500">
-                                                            Choose the business you work for
+                                                            Type to search for the business you work for
                                                         </p>
                                                     </div>
                                                 )}
