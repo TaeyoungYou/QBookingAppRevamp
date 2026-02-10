@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import {useState} from "react";
 import {useAuthQueries} from "../../hooks/useAuthQueries.ts";
+import {useBusinessQueries} from "../../hooks/useBusinessQueries.ts";
 import type {Id} from "../../../convex/_generated/dataModel";
 
 
@@ -11,8 +12,11 @@ const CompleteProfile = ({user, signOut}) => {
     const {
         addBusiness,
         updateProfile,
-        getAllIndustries
+        getAllIndustries,
+        addStaff
     } = useAuthQueries();
+
+    const { getbusinesses } = useBusinessQueries();
 
     const [userStatus, setUserStatus] = useState(user?.userStatus || "");
 
@@ -35,6 +39,7 @@ const CompleteProfile = ({user, signOut}) => {
         };
 
         const isBusiness = payload.userStatus === "owner";
+        const isEmployee = payload.userStatus === "employee";
         let businessId: Id<"businesses"> | undefined;
 
         try {
@@ -52,9 +57,30 @@ const CompleteProfile = ({user, signOut}) => {
                 });
             }
 
+            // 2. Create staff profile if employee
+            if (isEmployee) {
+                const selectedBusinessId = formData.get("businessId") as Id<"businesses">;
+                
+                if (!selectedBusinessId) {
+                    alert("Please select a business");
+                    return;
+                }
+                
+                await addStaff({
+                    businessId: selectedBusinessId,
+                    name: user.name || "Staff Member",
+                    role: formData.get("role") as string || "Staff",
+                    bio: formData.get("bio") as string || "",
+                    rating: 5.0,
+                    email: user.email,
+                    status: "active",
+                });
+                
+                // Set businessId for employee user profile
+                businessId = selectedBusinessId;
+            }
 
-
-            // 2. Always update user profile
+            // 3. Always update user profile
             await updateProfile({
                 id: user.id,
                 userStatus: payload.userStatus,
@@ -230,6 +256,78 @@ const CompleteProfile = ({user, signOut}) => {
                                                     {userStatus === "customer" ? "Tell us a bit about yourself" : "Your professional profile"}
                                                 </h3>
 
+                                                {/* Business selector for employees */}
+                                                {userStatus === "employee" && (
+                                                    <div className="mb-6">
+                                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                            Select Your Business <span className="text-red-500">*</span>
+                                                        </label>
+                                                        {(() => {
+                                                            const businesses = getbusinesses;
+
+                                                            // Loading state
+                                                            if (businesses === undefined) {
+                                                                return (
+                                                                    <div className="w-full px-5 py-4 rounded-xl border border-gray-300 bg-gray-50 text-gray-500">
+                                                                        Loading businesses...
+                                                                    </div>
+                                                                );
+                                                            }
+
+                                                            // Empty state
+                                                            if (!businesses || businesses.length === 0) {
+                                                                return (
+                                                                    <div className="w-full px-5 py-4 rounded-xl border border-red-300 bg-red-50 text-red-700">
+                                                                        No businesses found. Please contact your employer.
+                                                                    </div>
+                                                                );
+                                                            }
+
+                                                            return (
+                                                                <select
+                                                                    name="businessId"
+                                                                    required
+                                                                    defaultValue=""
+                                                                    className="w-full px-5 py-4 rounded-xl border border-gray-300
+                                                                        focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100
+                                                                        transition-all outline-none bg-white cursor-pointer
+                                                                        appearance-none
+                                                                        bg-[url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 20 20%22%3E%3Cpath stroke=%22%236b7280%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22m6 8 4 4 4-4%22/%3E%3C/svg%3E')]
+                                                                        bg-no-repeat bg-[right_1rem_center] bg-[length:12px]"
+                                                                >
+                                                                    <option value="" disabled>
+                                                                        — Select a business —
+                                                                    </option>
+                                                                    {businesses.map((business) => (
+                                                                        <option key={business._id} value={business._id}>
+                                                                            {business.businessName}
+                                                                        </option>
+                                                                    ))}
+                                                                </select>
+                                                            );
+                                                        })()}
+                                                        <p className="mt-2 text-sm text-gray-500">
+                                                            Choose the business you work for
+                                                        </p>
+                                                    </div>
+                                                )}
+
+                                                {/* Role field for employees */}
+                                                {userStatus === "employee" && (
+                                                    <div className="mb-6">
+                                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                            Role / Position <span className="text-red-500">*</span>
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            name="role"
+                                                            required
+                                                            placeholder="e.g., Hair Stylist, Barber, Nail Technician"
+                                                            className="w-full px-5 py-4 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all outline-none"
+                                                        />
+                                                    </div>
+                                                )}
+
                                                 {/* Profile Picture Upload */}
                                                 <div className="mb-8">
                                                     <label className="block text-sm font-semibold text-gray-700 mb-3">
@@ -243,24 +341,26 @@ const CompleteProfile = ({user, signOut}) => {
                                                         </div>
                                                         <input type="file" accept="image/*" name="profilePicture"
                                                                className="hidden"/>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => document.querySelector('input[name="profilePicture"]')?.click()}
-                                                            className="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition"
-                                                        >
-                                                            Upload Photo
-                                                        </button>
+                                                        {/*<button*/}
+                                                        {/*    type="button"*/}
+                                                        {/*    onClick={() => document.querySelector('input[name="profilePicture"]')?.click()}*/}
+                                                        {/*    className="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition"*/}
+                                                        {/*>*/}
+                                                        {/*    Upload Photo*/}
+                                                        {/*</button>*/}
                                                     </div>
                                                 </div>
 
                                                 {/* Bio */}
                                                 <div>
                                                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                                        Bio <span className="text-gray-400">(optional)</span>
+                                                        Bio {userStatus === "employee" && <span className="text-red-500">*</span>}
+                                                        {userStatus === "customer" && <span className="text-gray-400">(optional)</span>}
                                                     </label>
                                                     <textarea
                                                         name="bio"
                                                         rows={4}
+                                                        required={userStatus === "employee"}
                                                         placeholder={userStatus === "customer" ? "I love trying new hairstyles and coffee shops!" : "Specializing in balayage and modern cuts for 5+ years"}
                                                         className="w-full px-5 py-4 rounded-xl border border-gray-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all outline-none resize-none"
                                                     />
