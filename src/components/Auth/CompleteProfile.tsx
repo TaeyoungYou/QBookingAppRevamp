@@ -92,9 +92,9 @@ const CompleteProfile = ({user, signOut}) => {
                 
                 await addStaff({
                     businessId: selectedBusiness._id,
-                    name: user.name || "Staff Member",
-                    role: formData.get("role") as string || "Staff",
-                    bio: formData.get("bio") as string || "",
+                    name: formData.get("staffName") as string,
+                    role: formData.get("role") as string,
+                    bio: formData.get("bio") as string,
                     rating: 5.0,
                     email: user.email,
                     status: "active",
@@ -365,22 +365,40 @@ const CompleteProfile = ({user, signOut}) => {
                                             </div>
                                         )}
 
-                                        {/* Role field for employees */}
+                                        {/* Name and Role fields for employees */}
                                         {userStatus === "employee" && (
-                                            <div>
-                                                <label className="block text-sm/6 font-medium text-black-100">
-                                                    Role / Position <span className="text-red-500">*</span>
-                                                </label>
-                                                <div className="mt-2">
-                                                    <input
-                                                        type="text"
-                                                        name="role"
-                                                        required
-                                                        placeholder="e.g., Hair Stylist, Barber, Nail Technician"
-                                                        className="block w-full rounded-md bg-white/5 px-3 py-1.5 text-base text-black outline-1 -outline-offset-1 outline-black/10 placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6"
-                                                    />
+                                            <>
+                                                <div>
+                                                    <label className="block text-sm/6 font-medium text-black-100">
+                                                        Full Name <span className="text-red-500">*</span>
+                                                    </label>
+                                                    <div className="mt-2">
+                                                        <input
+                                                            type="text"
+                                                            name="staffName"
+                                                            required
+                                                            defaultValue={user?.name || ""}
+                                                            placeholder="e.g., John Doe"
+                                                            className="block w-full rounded-md bg-white/5 px-3 py-1.5 text-base text-black outline-1 -outline-offset-1 outline-black/10 placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6"
+                                                        />
+                                                    </div>
                                                 </div>
-                                            </div>
+                                                
+                                                <div>
+                                                    <label className="block text-sm/6 font-medium text-black-100">
+                                                        Role / Position <span className="text-red-500">*</span>
+                                                    </label>
+                                                    <div className="mt-2">
+                                                        <input
+                                                            type="text"
+                                                            name="role"
+                                                            required
+                                                            placeholder="e.g., Hair Stylist, Barber, Nail Technician"
+                                                            className="block w-full rounded-md bg-white/5 px-3 py-1.5 text-base text-black outline-1 -outline-offset-1 outline-black/10 placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </>
                                         )}
 
                                         {/* Bio */}
