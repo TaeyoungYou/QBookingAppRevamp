@@ -35,6 +35,19 @@ export const getStaffByBusiness = query({
             .collect();
     },
 });
+// ======================
+// Get staff by email
+// ======================
+export const getStaffByEmail = query({
+    args: { email: v.string() },
+    handler: async (ctx, args) => {
+        return await ctx.db
+            .query("staff")
+            .filter((q) => q.eq(q.field("email"), args.email))
+            .first();
+    },
+});
+
 
 // ======================
 // Get staff by name (optional, useful for filtering/search)
