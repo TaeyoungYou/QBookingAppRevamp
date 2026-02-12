@@ -190,9 +190,9 @@ const Header = () => {
               </Link>
               <Link
                 to="/appointment"
-                className={`bg-skyBlue  text-white text-center w-full py-2 rounded-full font-inter text-prussianBlue transition-colors ${
+                className={`bg-skyBlue text-center w-full py-2 rounded-full font-inter text-prussianBlue transition-colors ${
                   location.pathname === "/appointment"
-                    ? "text-skyBlue"
+                    ? "text-white"
                     : "text-prussianBlue"
                 }`}
               >
@@ -333,9 +333,9 @@ const Header = () => {
                 >
                   <Link
                     to="/appointment"
-                    className={`bg-skyBlue text-white text-center w-full py-2 rounded-full font-inter text-prussianBlue transition-colors ${
+                    className={`bg-skyBlue text-center w-full py-2 rounded-full font-inter text-prussianBlue transition-colors ${
                       location.pathname === "/appointment"
-                        ? "text-skyBlue"
+                        ? "text-white"
                         : "text-prussianBlue"
                     }`}
                   >
