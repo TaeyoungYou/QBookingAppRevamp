@@ -354,28 +354,12 @@
   overflow: hidden;
 }
 
-/* Disable slot selection in month and week views */
-.rbc-month-view-container .rbc-month-view .rbc-day-slot,
-.rbc-month-view-container .rbc-month-view .rbc-day-bg,
-.rbc-month-view-container .rbc-month-view .rbc-date-cell,
-.rbc-month-view-container .rbc-month-view .rbc-row-segment {
-  pointer-events: none !important;
-  cursor: default !important;
-}
-
-.rbc-month-view-container .rbc-month-view .rbc-event {
-  pointer-events: all !important;
+/* Month view - enable clicking on dates to navigate to day view */
+.rbc-month-view-container .rbc-month-view .rbc-day-bg {
   cursor: pointer !important;
 }
 
-/* Disable for week view */
-.rbc-week-view .rbc-time-view .rbc-day-slot,
-.rbc-week-view .rbc-time-view .rbc-time-slot {
-  pointer-events: none !important;
-  cursor: default !important;
-}
-
-.rbc-week-view .rbc-time-view .rbc-event {
+.rbc-month-view-container .rbc-month-view .rbc-event {
   pointer-events: all !important;
   cursor: pointer !important;
 }

@@ -40,7 +40,7 @@ moment.locale("en");
 const localizer = momentLocalizer(moment);
 
 // ===== CONFIGURATION CONSTANTS =====
-const CLOSED_DAYS = [0]; // Days salon is closed (0 = Sunday)
+const CLOSED_DAYS: number[] = []; // No closed days - all days are open
 const BUSINESS_HOURS = { start: 9, end: 20 }; // Business hours: 9 AM - 8 PM
 const PRIMARY_LOCATION = "Polish Pro Studio"; // Primary location name
 
@@ -366,12 +366,30 @@ export default function BookingCalendar({
     setSelectedEvent(event);
   }, []);
 
-  // Handler: When selecting an empty time slot on calendar (only works in Day view)
+  // Handler: When selecting an empty time slot on calendar (works in Day and Week view)
   const handleSlotSelect = useCallback(
       (slotInfo: SlotInfo) => {
+        // If in month view, switch to day view for the selected date
+        if (view === Views.MONTH) {
+          setDate(slotInfo.start);
+          setView(Views.DAY);
+          return;
+        }
+
         // Check if it's a closed day
         if (isClosedDay(slotInfo.start)) {
           showFeedback("Salon is closed on this day.", "error");
+          return;
+        }
+
+        // Validate that selection is within a single day
+        const startDay = slotInfo.start.getDate();
+        const endDay = slotInfo.end.getDate();
+        const startMonth = slotInfo.start.getMonth();
+        const endMonth = slotInfo.end.getMonth();
+        
+        if (startDay !== endDay || startMonth !== endMonth) {
+          showFeedback("Please select a time slot within a single day.", "error");
           return;
         }
 
@@ -407,7 +425,7 @@ export default function BookingCalendar({
         }));
         setIsFormOpen(true);
       },
-      [visibleStaff, formData.service]
+      [view, visibleStaff, formData.service]
   );
 
   // Handler: When clicking "Add new" button - create quick booking with current time
@@ -759,9 +777,9 @@ export default function BookingCalendar({
               onView={(next) => setView(next)} // Handler when view changes
               date={date} // Date being displayed
               onNavigate={handleNavigate} // Handler when navigating
-              selectable={view === Views.DAY} // Only allow slot selection in Day view
+              selectable // Allow slot selection in all views
               longPressThreshold={200} // Hold time to select (mobile)
-              onSelectSlot={view === Views.DAY ? handleSlotSelect : undefined} // Handler when slot is selected
+              onSelectSlot={handleSlotSelect} // Handler when slot is selected
               onSelectEvent={handleSelectEvent} // Handler when clicking on event
               step={15} // Each time step = 15 minutes
               timeslots={4} // 4 timeslots per hour (15 min x 4 = 60 min)
@@ -780,13 +798,9 @@ export default function BookingCalendar({
               components={{
                 event: CustomEvent, // Custom component to display event
                 toolbar: () => null, // Hide toolbar
-                resourceHeader: ({ resource }) => (
-                    // Custom header for each staff column (Day view)
-                    <CustomResourceHeader resource={resource as any} />
-                ),
               }}
-              // Resources: staff list (only used in Day view)
-              resources={view === Views.DAY ? resourcesForDay : undefined}
+              // Resources removed for single column day view
+              resources={undefined}
               resourceIdAccessor="id" // ID property of resource
               resourceTitleAccessor="name" // Name property of resource
               views={[Views.DAY, Views.WEEK, Views.MONTH]} // Available views
