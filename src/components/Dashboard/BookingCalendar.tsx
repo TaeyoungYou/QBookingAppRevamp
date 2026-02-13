@@ -29,9 +29,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   useStaffDirectory,
   type StaffMember,
+  type StaffStatus,
 } from "../../context/StaffContext";
 import { useAppointments } from "../../context/AppointmentsContext";
 import { useCustomers } from "../../context/CustomersContext";
+import { useUser } from "../../context/UserContext";
+import { useCurrentUser, useBusinessQueries } from "../../hooks/useBusinessQueries";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+
+// Color palette for staff accent colors
+const palette = ["#8ecae6", "#f4a261", "#90be6d", "#cdb4db", "#ffb703"];
 
 // Set locale to English for moment
 moment.locale("en");
@@ -216,9 +224,54 @@ export default function BookingCalendar({
                                           selectedLocation, // Props: selected location for filtering
                                         }: BookingCalendarProps) {
   // ===== CONTEXTS & HOOKS =====
-  const { staff } = useStaffDirectory(); // Get staff list from context
+  const { staff } = useStaffDirectory(); // Get staff list from context (fallback)
   const { addAppointment } = useAppointments(); // Function to add appointment to context
   const { addCustomer, getCustomerByPhone } = useCustomers(); // Functions to manage customers
+  const { user } = useUser(); // Get current user from local context
+  const { user: currentUser } = useCurrentUser(); // Get current user with businessId from database
+  const { getbusinesses } = useBusinessQueries(); // Get business data
+  
+  // Check if user is business owner (from database, not local context)
+  const isBusinessOwner = currentUser?.status === "owner";
+  
+  // Fetch staff from database by businessId
+  const dbStaff = useQuery(
+    api.functions.staffs.getStaffByBusiness,
+    currentUser?.businessId ? { businessId: currentUser.businessId } : "skip"
+  );
+  
+  // Convert database staff to StaffMember format
+  const businessStaff: StaffMember[] = useMemo(() => {
+    if (!dbStaff) return staff; // Fallback to context staff if no data
+    
+    return dbStaff.map((s, index) => ({
+      id: s._id,
+      name: s.name,
+      role: s.role,
+      avatar: s.image,
+      email: s.email || "",
+      phone: "", // Phone not in database schema yet
+      accentColor: palette[index % palette.length], // Assign colors cyclically
+      status: (s.status as StaffStatus) || "active",
+    }));
+  }, [dbStaff, staff]);
+  
+  // Get business name from the current user's business
+  const currentBusiness = getbusinesses?.find(
+    (business) => business._id === currentUser?.businessId
+  );
+  const businessName = currentBusiness?.businessName || "Business Name";
+  
+  // Filter staff based on user role
+  // If owner: show all staff
+  // If employee: show only their own profile
+  const filteredStaffByRole = useMemo(() => {
+    if (isBusinessOwner) {
+      return businessStaff; // Owner sees all staff
+    }
+    // Employee sees only themselves
+    return businessStaff.filter((member) => member.email === user?.email);
+  }, [businessStaff, isBusinessOwner, user?.email]);
 
   // ===== STATE MANAGEMENT =====
   // State managing current view (Day/Week/Month)
@@ -246,12 +299,21 @@ export default function BookingCalendar({
     service: serviceCatalog[0].name, // Default service
     customerName: "", // Customer name
     customerPhone: "", // Phone number
-    staffId: staff[0]?.id ?? "", // Staff member ID
+    staffId: businessStaff[0]?.id ?? "", // Staff member ID
     duration: serviceCatalog[0].duration, // Service duration
   });
 
   // State filtering staff displayed in header
-  const [activeStaffFilter, setActiveStaffFilter] = useState<string>("all");
+  // For employees: automatically set to their own ID
+  // For owners: default to "all"
+  const [activeStaffFilter, setActiveStaffFilter] = useState<string>(() => {
+    if (!isBusinessOwner && user?.email) {
+      // Find the staff member by email
+      const currentStaffMember = businessStaff.find(s => s.email === user.email);
+      return currentStaffMember?.id || "all";
+    }
+    return "all";
+  });
 
   // State managing feedback messages (success/error)
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -266,31 +328,43 @@ export default function BookingCalendar({
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   // ===== COMPUTED VALUES =====
-  // Calculate list of staff to display based on filter
-  const visibleStaff =
-      activeStaffFilter === "all"
-          ? staff // Show all if "all" is selected
-          : staff.filter((s) => s.id === activeStaffFilter); // Show only selected staff
+  // Calculate list of staff to display based on filter and user role
+  const visibleStaff = useMemo(() => {
+    if (activeStaffFilter === "all") {
+      return filteredStaffByRole; // Show all filtered staff (based on role)
+    }
+    return filteredStaffByRole.filter((s) => s.id === activeStaffFilter); // Show only selected staff
+  }, [activeStaffFilter, filteredStaffByRole]);
 
   // Resources to pass into Calendar component (used for Day view)
-  const resourcesForDay = visibleStaff.length ? visibleStaff : staff;
+  const resourcesForDay = visibleStaff.length ? visibleStaff : filteredStaffByRole;
 
   // Create Map for quick lookup of staff information by ID
   // useMemo to avoid recalculation on every render
   const staffLookup = useMemo(() => {
     const map = new Map<string, StaffMember>();
-    staff.forEach((member) => map.set(member.id, member));
+    businessStaff.forEach((member) => map.set(member.id, member));
     return map;
-  }, [staff]);
+  }, [businessStaff]);
 
   // ===== EFFECTS =====
   // Effect: Update staffId in form when staff list changes
   useEffect(() => {
     setFormData((prev) => ({
       ...prev,
-      staffId: prev.staffId || staff[0]?.id || "",
+      staffId: prev.staffId || businessStaff[0]?.id || "",
     }));
-  }, [staff]);
+  }, [businessStaff]);
+
+  // Effect: Set staff filter for employees to their own ID
+  useEffect(() => {
+    if (!isBusinessOwner && user?.email && businessStaff.length > 0) {
+      const currentStaffMember = businessStaff.find(s => s.email === user.email);
+      if (currentStaffMember) {
+        setActiveStaffFilter(currentStaffMember.id);
+      }
+    }
+  }, [isBusinessOwner, user?.email, businessStaff]);
 
   // ===== UTILITY FUNCTIONS =====
   // Display feedback message and auto-hide after 5 seconds
@@ -397,7 +471,7 @@ export default function BookingCalendar({
         const staffId =
             typeof slotInfo.resourceId === "string" && slotInfo.resourceId
                 ? slotInfo.resourceId
-                : visibleStaff[0]?.id ?? staff[0]?.id ?? "";
+                : visibleStaff[0]?.id ?? businessStaff[0]?.id ?? "";
 
         // Calculate the actual dragged duration in minutes
         const draggedDurationMs =
@@ -447,7 +521,7 @@ export default function BookingCalendar({
       // If filtering a specific staff, use that staff, otherwise use first staff
       staffId:
           activeStaffFilter === "all"
-              ? staff[0]?.id ?? prev.staffId
+              ? businessStaff[0]?.id ?? prev.staffId
               : activeStaffFilter,
       duration: defaultDuration,
     }));
@@ -464,7 +538,7 @@ export default function BookingCalendar({
       service: serviceCatalog[0].name,
       customerName: "",
       customerPhone: "",
-      staffId: staff[0]?.id ?? "",
+      staffId: businessStaff[0]?.id ?? "",
       duration: serviceCatalog[0].duration,
     });
   };
@@ -610,23 +684,25 @@ export default function BookingCalendar({
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 px-6 py-4">
           {/* Left side: Display location and staff filter */}
           <div className="flex flex-wrap items-center gap-3">
-            {/* Badge displaying location name */}
+            {/* Badge displaying business name */}
             <span className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">
-            {PRIMARY_LOCATION}
+            {businessName}
           </span>
-            {/* Dropdown staff filter */}
-            <select
-                value={activeStaffFilter}
-                onChange={(e) => setActiveStaffFilter(e.target.value)}
-                className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm focus:border-slate-400 focus:outline-none"
-            >
-              <option value="all">Working Staff</option>
-              {staff.map((member) => (
-                  <option key={member.id} value={member.id}>
-                    {member.name}
-                  </option>
-              ))}
-            </select>
+            {/* Dropdown staff filter - only show for business owners */}
+            {isBusinessOwner && (
+              <select
+                  value={activeStaffFilter}
+                  onChange={(e) => setActiveStaffFilter(e.target.value)}
+                  className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm focus:border-slate-400 focus:outline-none"
+              >
+                <option value="all">All Staff</option>
+                {filteredStaffByRole.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.name}
+                    </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {/* Right side: Navigation, view switcher, and Add new button */}
@@ -1055,7 +1131,7 @@ export default function BookingCalendar({
                               }
                               className="w-full appearance-none rounded-lg border border-slate-200 px-3 py-2 pl-9 text-sm font-medium text-slate-800 focus:border-slate-400 focus:outline-none"
                           >
-                            {staff.map((member) => (
+                            {businessStaff.map((member) => (
                                 <option key={member.id} value={member.id}>
                                   {member.name}
                                 </option>
