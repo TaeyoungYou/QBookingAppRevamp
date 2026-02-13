@@ -52,6 +52,7 @@ const menuItems = [
     label: "Staff Profile",
     path: "/dashboard/staff-profile",
     adminOnly: false,
+    ownerHidden: true,
   },
 
   {
@@ -72,7 +73,11 @@ export default function Sidebar({ isOpen }: SidebarProps) {
   const user = useQuery(api.functions.users.getCurrentUser);
 
   const filteredMenuItems = menuItems.filter(
-    (item) => !item.adminOnly || user?.status == "owner"
+    (item) => {
+      if (item.adminOnly && user?.status !== "owner") return false;
+      if (item.ownerHidden && user?.status === "owner") return false;
+      return true;
+    }
   );
 
   return (
