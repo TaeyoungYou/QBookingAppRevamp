@@ -18,7 +18,15 @@ export const useBusinessQueries = () => {
     addBusiness,
     getbusinesses,
     updateBusiness,
-    
   }
 }
+
+export const useBusinessSearch = (searchTerm: string) => {
+  const searchResults = useQuery(
+    api.functions.businesses.searchBusinesses,
+    searchTerm ? { searchTerm } : "skip"
+  );
+  
+  return searchResults;
+};
 

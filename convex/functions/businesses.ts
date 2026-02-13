@@ -65,6 +65,23 @@ export const getBusinessByIndustryAndName = query({
     },
 });
 
+//Function to search business. This has debouncer to save functions call when
+//used in a search input
+export const searchBusinesses = query({
+    args: { searchTerm: v.string() },
+    handler: async (ctx, { searchTerm }) => {
+        if (!searchTerm || searchTerm.trim() === "") {
+            return [];
+        }
+        
+        const allBusinesses = await ctx.db.query("businesses").collect();
+        const lowerSearchTerm = searchTerm.toLowerCase();
+        
+        return allBusinesses.filter(business => 
+            business.businessName.toLowerCase().includes(lowerSearchTerm)
+        ).slice(0, 10); // Limit to 10 results
+    },
+});
 
 export const updateBusiness = mutation({
   args: {
