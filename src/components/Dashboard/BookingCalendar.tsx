@@ -40,7 +40,7 @@ moment.locale("en");
 const localizer = momentLocalizer(moment);
 
 // ===== CONFIGURATION CONSTANTS =====
-const CLOSED_DAYS = [0]; // Days salon is closed (0 = Sunday)
+const CLOSED_DAYS: number[] = []; // No closed days - all days are open
 const BUSINESS_HOURS = { start: 9, end: 20 }; // Business hours: 9 AM - 8 PM
 const PRIMARY_LOCATION = "Polish Pro Studio"; // Primary location name
 
@@ -735,9 +735,9 @@ export default function BookingCalendar({
               onView={(next) => setView(next)} // Handler when view changes
               date={date} // Date being displayed
               onNavigate={handleNavigate} // Handler when navigating
-              selectable={view === Views.DAY} // Only allow slot selection in Day view
+              selectable // Allow slot selection in all views
               longPressThreshold={200} // Hold time to select (mobile)
-              onSelectSlot={view === Views.DAY ? handleSlotSelect : undefined} // Handler when slot is selected
+              onSelectSlot={handleSlotSelect} // Handler when slot is selected
               onSelectEvent={handleSelectEvent} // Handler when clicking on event
               step={15} // Each time step = 15 minutes
               timeslots={4} // 4 timeslots per hour (15 min x 4 = 60 min)
