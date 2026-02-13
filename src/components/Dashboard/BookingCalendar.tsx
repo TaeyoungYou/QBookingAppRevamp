@@ -363,12 +363,30 @@ export default function BookingCalendar({
     setSelectedEvent(event);
   }, []);
 
-  // Handler: When selecting an empty time slot on calendar (only works in Day view)
+  // Handler: When selecting an empty time slot on calendar (works in Day and Week view)
   const handleSlotSelect = useCallback(
       (slotInfo: SlotInfo) => {
+        // If in month view, switch to day view for the selected date
+        if (view === Views.MONTH) {
+          setDate(slotInfo.start);
+          setView(Views.DAY);
+          return;
+        }
+
         // Check if it's a closed day
         if (isClosedDay(slotInfo.start)) {
           showFeedback("Salon is closed on this day.", "error");
+          return;
+        }
+
+        // Validate that selection is within a single day
+        const startDay = slotInfo.start.getDate();
+        const endDay = slotInfo.end.getDate();
+        const startMonth = slotInfo.start.getMonth();
+        const endMonth = slotInfo.end.getMonth();
+        
+        if (startDay !== endDay || startMonth !== endMonth) {
+          showFeedback("Please select a time slot within a single day.", "error");
           return;
         }
 
@@ -404,7 +422,7 @@ export default function BookingCalendar({
         }));
         setIsFormOpen(true);
       },
-      [visibleStaff, formData.service]
+      [view, visibleStaff, formData.service]
   );
 
   // Handler: When clicking "Add new" button - create quick booking with current time

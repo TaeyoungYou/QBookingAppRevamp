@@ -354,13 +354,9 @@
   overflow: hidden;
 }
 
-/* Month view - disable slot selection */
-.rbc-month-view-container .rbc-month-view .rbc-day-slot,
-.rbc-month-view-container .rbc-month-view .rbc-day-bg,
-.rbc-month-view-container .rbc-month-view .rbc-date-cell,
-.rbc-month-view-container .rbc-month-view .rbc-row-segment {
-  pointer-events: none !important;
-  cursor: default !important;
+/* Month view - enable clicking on dates to navigate to day view */
+.rbc-month-view-container .rbc-month-view .rbc-day-bg {
+  cursor: pointer !important;
 }
 
 .rbc-month-view-container .rbc-month-view .rbc-event {
