@@ -756,13 +756,9 @@ export default function BookingCalendar({
               components={{
                 event: CustomEvent, // Custom component to display event
                 toolbar: () => null, // Hide toolbar
-                resourceHeader: ({ resource }) => (
-                    // Custom header for each staff column (Day view)
-                    <CustomResourceHeader resource={resource as any} />
-                ),
               }}
-              // Resources: staff list (only used in Day view)
-              resources={view === Views.DAY ? resourcesForDay : undefined}
+              // Resources removed for single column day view
+              resources={undefined}
               resourceIdAccessor="id" // ID property of resource
               resourceTitleAccessor="name" // Name property of resource
               views={[Views.DAY, Views.WEEK, Views.MONTH]} // Available views
