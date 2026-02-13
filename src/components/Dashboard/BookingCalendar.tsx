@@ -262,6 +262,9 @@ export default function BookingCalendar({
   // State managing form validation errors
   const [formError, setFormError] = useState<string | null>(null);
 
+  // State managing date picker visibility
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
   // ===== COMPUTED VALUES =====
   // Calculate list of staff to display based on filter
   const visibleStaff =
@@ -632,9 +635,30 @@ export default function BookingCalendar({
               </button>
             </div>
 
-            {/* Label displaying current day/week/month */}
-            <div className="min-w-[170px] rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-800">
-              {getToolbarLabel()}
+            {/* Label displaying current day/week/month - clickable to show date picker */}
+            <div className="relative">
+              <button
+                  onClick={() => setShowDatePicker(!showDatePicker)}
+                  className="min-w-[170px] rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100 transition-colors"
+              >
+                {getToolbarLabel()}
+              </button>
+              
+              {/* Mini calendar date picker dropdown */}
+              {showDatePicker && (
+                  <div className="absolute top-full mt-2 right-0 z-50 bg-white rounded-lg shadow-xl border border-slate-200 p-4">
+                    <input
+                        type="date"
+                        value={moment(date).format("YYYY-MM-DD")}
+                        onChange={(e) => {
+                          const selectedDate = new Date(e.target.value);
+                          setDate(selectedDate);
+                          setShowDatePicker(false);
+                        }}
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 focus:border-slate-400 focus:outline-none"
+                    />
+                  </div>
+              )}
             </div>
 
             {/* View switcher: Day | Week | Month */}
