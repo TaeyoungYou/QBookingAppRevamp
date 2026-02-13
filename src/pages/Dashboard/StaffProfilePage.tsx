@@ -16,8 +16,9 @@ import {
   Bell,
 } from "lucide-react";
 import { useDashboardLayout } from "./DashboardLayout";
-import { useUser } from "../../context/UserContext";
-import { useStaffDirectory } from "../../context/StaffContext";
+import { useAuthQueries } from "../../hooks/useAuthQueries";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 
 const availabilityOptions = [
   { label: "Full-time", sub: "40h+ on-site availability" },
@@ -33,40 +34,41 @@ const statusBadgeStyles: Record<string, string> = {
 
 export default function StaffProfilePage() {
   const { isSidebarOpen, setIsSidebarOpen } = useDashboardLayout();
-  const { user, setUser } = useUser();
-  const { staff, updateStaff } = useStaffDirectory();
-
-  const currentStaffMember = staff.find(
-    (member) => member.email === user?.email
+  const { user } = useAuthQueries();
+  
+  // Fetch staff member from database
+  const currentStaffMember = useQuery(
+    api.functions.staffs.getStaffByEmail,
+    user?.email ? { email: user.email } : "skip"
   );
+  
+  const updateStaffMutation = useMutation(api.functions.staffs.updateStaff);
 
   const [isEditing, setIsEditing] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState(
-    currentStaffMember?.avatar || user?.avatar || ""
+    currentStaffMember?.image || ""
   );
   const [editForm, setEditForm] = useState({
-    name: user?.name || currentStaffMember?.name || "",
-    email: user?.email || currentStaffMember?.email || "",
-    phone: currentStaffMember?.phone || user?.phone || "",
-    availability:
-      currentStaffMember?.availability || user?.availability || "Full-time",
-    avatar: currentStaffMember?.avatar || user?.avatar || "",
+    name: currentStaffMember?.name || "",
+    email: currentStaffMember?.email || "",
+    phone: user?.phone || "",
+    availability: "Full-time", // Will be left as is for now
+    avatar: currentStaffMember?.image || "",
   });
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    if (!isEditing) {
+    if (!isEditing && currentStaffMember) {
       setEditForm({
-        name: user?.name || currentStaffMember?.name || "",
-        email: user?.email || currentStaffMember?.email || "",
-        phone: currentStaffMember?.phone || user?.phone || "",
-        availability:
-          currentStaffMember?.availability || user?.availability || "Full-time",
-        avatar: currentStaffMember?.avatar || user?.avatar || "",
+        name: currentStaffMember.name || "",
+        email: currentStaffMember.email || "",
+        phone: user?.phone || "",
+        availability: "Full-time",
+        avatar: currentStaffMember.image || "",
       });
-      setAvatarPreview(currentStaffMember?.avatar || user?.avatar || "");
+      setAvatarPreview(currentStaffMember.image || "");
     }
-  }, [user, currentStaffMember, isEditing]);
+  }, [currentStaffMember, isEditing, user?.phone]);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -93,80 +95,65 @@ export default function StaffProfilePage() {
     reader.readAsDataURL(file);
   };
 
-  const handleSave = () => {
-    if (user) {
-      setUser({
-        ...user,
-        name: editForm.name.trim() || user.name,
-        email: editForm.email.trim() || user.email,
-        phone: editForm.phone.trim(),
-        availability: editForm.availability,
-        avatar: editForm.avatar || undefined,
-      });
+  const handleSave = async () => {
+    if (currentStaffMember?._id) {
+      try {
+        await updateStaffMutation({
+          id: currentStaffMember._id,
+          name: editForm.name.trim() || currentStaffMember.name,
+          image: editForm.avatar || currentStaffMember.image,
+          bio: currentStaffMember.bio,
+          role: currentStaffMember.role,
+          rating: currentStaffMember.rating,
+        });
+        setIsEditing(false);
+      } catch (error) {
+        console.error("Failed to update staff profile:", error);
+      }
     }
-
-    if (currentStaffMember) {
-      updateStaff(currentStaffMember.id, {
-        name: editForm.name.trim() || currentStaffMember.name,
-        email: editForm.email.trim() || currentStaffMember.email,
-        phone: editForm.phone.trim(),
-        availability: editForm.availability,
-        avatar: editForm.avatar || undefined,
-      });
-    }
-
-    setIsEditing(false);
   };
 
   const handleCancel = () => {
     setIsEditing(false);
-    setEditForm({
-      name: user?.name || currentStaffMember?.name || "",
-      email: user?.email || currentStaffMember?.email || "",
-      phone: currentStaffMember?.phone || user?.phone || "",
-      availability:
-        currentStaffMember?.availability || user?.availability || "Full-time",
-      avatar: currentStaffMember?.avatar || user?.avatar || "",
-    });
-    setAvatarPreview(currentStaffMember?.avatar || user?.avatar || "");
+    if (currentStaffMember) {
+      setEditForm({
+        name: currentStaffMember.name || "",
+        email: currentStaffMember.email || "",
+        phone: user?.phone || "",
+        availability: "Full-time",
+        avatar: currentStaffMember.image || "",
+      });
+      setAvatarPreview(currentStaffMember.image || "");
+    }
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
   const displayName =
-    (isEditing ? editForm.name : user?.name || currentStaffMember?.name) ||
-    "Staff member";
+    (isEditing ? editForm.name : currentStaffMember?.name) || "Staff member";
   const displayEmail =
-    (isEditing ? editForm.email : user?.email || currentStaffMember?.email) ||
-    "No email";
+    (isEditing ? editForm.email : currentStaffMember?.email) || "No email";
   const displayPhone =
-    (isEditing ? editForm.phone : currentStaffMember?.phone || user?.phone) ||
-    "Not provided";
+    (isEditing ? editForm.phone : user?.phone) || "Not provided";
 
-  const availabilityLabel = isEditing
-    ? editForm.availability
-    : currentStaffMember?.availability || user?.availability || "Full-time";
+  const availabilityLabel = isEditing ? editForm.availability : "Full-time";
 
-  const profileStatus =
-    currentStaffMember?.status || user?.profileStatus || "Active";
+  const profileStatus = currentStaffMember?.status || "active";
   const normalizedStatus = profileStatus.toLowerCase();
   const statusStyle =
     statusBadgeStyles[normalizedStatus] || statusBadgeStyles.active;
 
-  const profileRole =
-    currentStaffMember?.role ||
-    user?.roleTitle ||
-    (user?.role === "admin" ? "Admin" : "Team member");
+  const profileRole = currentStaffMember?.role || "Team member";
 
-  const memberSinceLabel = currentStaffMember
+  const memberSinceLabel = currentStaffMember?._creationTime
     ? new Intl.DateTimeFormat("en-US", {
         month: "short",
         year: "numeric",
-      }).format(new Date())
-    : user?.memberSince || "N/A";
+      }).format(new Date(currentStaffMember._creationTime))
+    : "N/A";
 
-  const quickNotes = currentStaffMember?.notes || user?.notes;
+  const quickNotes = currentStaffMember?.bio;
 
   const focusAreas = [
     { label: "Gel artistry", value: 86 },
@@ -247,10 +234,10 @@ export default function StaffProfilePage() {
                         {availabilityLabel}
                       </span>
                       <span
-                        className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${statusStyle}`}
+                        className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold capitalize ${statusStyle}`}
                       >
                         <ShieldCheck size={14} />
-                        {currentStaffMember?.status || "Active"}
+                        {profileStatus}
                       </span>
                       <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">
                         <Phone size={14} />
@@ -333,15 +320,12 @@ export default function StaffProfilePage() {
                       <input
                         type="email"
                         value={editForm.email}
-                        onChange={(e) =>
-                          setEditForm((prev) => ({
-                            ...prev,
-                            email: e.target.value,
-                          }))
-                        }
+                        readOnly
+                        disabled
                         placeholder="alex@example.com"
-                        className="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
+                        className="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm bg-slate-50 text-slate-500 cursor-not-allowed"
                       />
+                      <p className="text-xs text-slate-400 mt-1">Email cannot be changed</p>
                     </div>
                     <div>
                       <label className="text-xs font-semibold text-slate-500">
@@ -482,12 +466,20 @@ export default function StaffProfilePage() {
                     </p>
                   </div>
                 </div>
+                {currentStaffMember?.rating !== undefined && (
+                  <div className="rounded-2xl border border-slate-100 p-4">
+                    <p className="text-xs uppercase text-slate-500">Rating</p>
+                    <p className="text-base font-semibold text-slate-900">
+                      {currentStaffMember.rating.toFixed(1)} / 5.0
+                    </p>
+                  </div>
+                )}
                 <div className="rounded-2xl border border-slate-100 p-4">
                   <p className="text-xs uppercase text-slate-500">
                     Account type
                   </p>
-                  <p className="text-base font-semibold text-slate-900">
-                    {user?.role || "Employee"}
+                  <p className="text-base font-semibold text-slate-900 capitalize">
+                    {user?.status || "Employee"}
                   </p>
                 </div>
                 <div className="rounded-2xl border border-slate-100 p-4">
@@ -502,7 +494,7 @@ export default function StaffProfilePage() {
                   <p className="text-xs uppercase text-slate-500">
                     Profile status
                   </p>
-                  <p className="text-base font-semibold text-emerald-600">
+                  <p className="text-base font-semibold text-emerald-600 capitalize">
                     {profileStatus}
                   </p>
                 </div>
@@ -510,7 +502,7 @@ export default function StaffProfilePage() {
               {quickNotes && (
                 <div className="rounded-2xl border border-slate-100 p-4 bg-slate-50">
                   <p className="text-xs uppercase text-slate-500 mb-1">
-                    Team notes
+                    Bio
                   </p>
                   <p className="text-sm text-slate-700">{quickNotes}</p>
                 </div>
