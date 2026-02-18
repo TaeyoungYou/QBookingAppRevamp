@@ -22,6 +22,8 @@ import {
   Scissors,
   User,
   X,
+  Trash2,
+  Edit,
 } from "lucide-react";
 // Import framer-motion for animations
 import { motion, AnimatePresence } from "framer-motion";
@@ -31,12 +33,12 @@ import {
   type StaffMember,
   type StaffStatus,
 } from "../../context/StaffContext";
-import { useAppointments } from "../../context/AppointmentsContext";
 import { useCustomers } from "../../context/CustomersContext";
 import { useUser } from "../../context/UserContext";
 import { useCurrentUser, useBusinessQueries } from "../../hooks/useBusinessQueries";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
 
 // Color palette for staff accent colors
 const palette = ["#8ecae6", "#f4a261", "#90be6d", "#cdb4db", "#ffb703"];
@@ -225,11 +227,14 @@ export default function BookingCalendar({
                                         }: BookingCalendarProps) {
   // ===== CONTEXTS & HOOKS =====
   const { staff } = useStaffDirectory(); // Get staff list from context (fallback)
-  const { addAppointment } = useAppointments(); // Function to add appointment to context
   const { addCustomer, getCustomerByPhone } = useCustomers(); // Functions to manage customers
   const { user } = useUser(); // Get current user from local context
   const { user: currentUser } = useCurrentUser(); // Get current user with businessId from database
   const { getbusinesses } = useBusinessQueries(); // Get business data
+  
+  // Import mutation for creating appointments in database
+  const createAppointmentMutation = useMutation(api.functions.appointments.addAppointment);
+  const deleteAppointmentMutation = useMutation(api.functions.appointments.deleteAppointment);
   
   // Check if user is business owner (from database, not local context)
   const isBusinessOwner = currentUser?.status === "owner";
@@ -249,6 +254,12 @@ export default function BookingCalendar({
   // Fetch services from database by businessId
   const dbServices = useQuery(
     api.functions.services.getServicesByBusiness,
+    currentUser?.businessId ? { businessId: currentUser.businessId } : "skip"
+  );
+  
+  // Fetch appointments from database by businessId
+  const dbAppointments = useQuery(
+    api.functions.appointments.getAppointmentsByBusiness,
     currentUser?.businessId ? { businessId: currentUser.businessId } : "skip"
   );
   
@@ -329,8 +340,8 @@ export default function BookingCalendar({
       return businessStaff; // Owner sees all staff
     }
     // Employee sees only themselves
-    return businessStaff.filter((member) => member.email === user?.email);
-  }, [businessStaff, isBusinessOwner, user?.email]);
+    return businessStaff.filter((member) => member.email === currentUser?.email);
+  }, [businessStaff, isBusinessOwner, currentUser?.email]);
 
   // ===== STATE MANAGEMENT =====
   // State managing current view (Day/Week/Month)
@@ -352,13 +363,16 @@ export default function BookingCalendar({
   const [draftSlot, setDraftSlot] = useState<{ start: Date; end: Date } | null>(
       null
   );
+  
+  // State to track if we're editing an existing appointment
+  const [editingAppointmentId, setEditingAppointmentId] = useState<string | null>(null);
 
   // State managing booking form data
   const [formData, setFormData] = useState({
     service: "", // Will be set when services load
     customerName: "", // Customer name
     customerPhone: "", // Phone number
-    staffId: businessStaff[0]?.id ?? "", // Staff member ID
+    staffId: "", // Staff member ID - will be set based on user role
     duration: 60, // Default duration
   });
 
@@ -366,9 +380,9 @@ export default function BookingCalendar({
   // For employees: automatically set to their own ID
   // For owners: default to "all"
   const [activeStaffFilter, setActiveStaffFilter] = useState<string>(() => {
-    if (!isBusinessOwner && user?.email) {
+    if (!isBusinessOwner && currentUser?.email) {
       // Find the staff member by email
-      const currentStaffMember = businessStaff.find(s => s.email === user.email);
+      const currentStaffMember = businessStaff.find(s => s.email === currentUser.email);
       return currentStaffMember?.id || "all";
     }
     return "all";
@@ -397,6 +411,39 @@ export default function BookingCalendar({
       }));
     }
   }, [serviceCatalogFromDB]);
+  
+  // Load appointments from database and convert to calendar events
+  useEffect(() => {
+    if (!dbAppointments || !dbServices || !businessStaff.length) return;
+    
+    const convertedEvents: BookingEvent[] = dbAppointments.map((apt) => {
+      // Find the service name
+      const service = dbServices.find(s => s._id === apt.serviceId);
+      const serviceName = service?.serviceName || "Unknown Service";
+      
+      // Get customer info from guestInfo or user
+      const customerName = apt.guestInfo?.name || "Customer";
+      const customerPhone = apt.guestInfo?.phone || "";
+      
+      return {
+        id: apt._id,
+        title: serviceName,
+        service: serviceName,
+        staffId: apt.employeeId,
+        location: PRIMARY_LOCATION,
+        start: new Date(apt.appointmentStart),
+        end: new Date(apt.appointmentEnd),
+        status: apt.appointmentStatus as BookingStatus,
+        customer: {
+          name: customerName,
+          phone: customerPhone,
+        },
+        resourceId: apt.employeeId,
+      };
+    });
+    
+    setEvents(convertedEvents);
+  }, [dbAppointments, dbServices, businessStaff]);
 
   // ===== COMPUTED VALUES =====
   // Calculate list of staff to display based on filter and user role
@@ -421,21 +468,50 @@ export default function BookingCalendar({
   // ===== EFFECTS =====
   // Effect: Update staffId in form when staff list changes
   useEffect(() => {
+    if (businessStaff.length === 0) return;
+    
+    // Debug logging
+    console.log("Setting default staff ID:", {
+      isBusinessOwner,
+      userEmail: user?.email,
+      currentUserEmail: currentUser?.email,
+      businessStaff: businessStaff.map(s => ({ id: s.id, name: s.name, email: s.email })),
+    });
+    
+    // Determine the correct staff ID based on user role
+    let defaultStaffId: string;
+    if (!isBusinessOwner && currentUser?.email) {
+      // Employee: find their staff profile using currentUser.email
+      const currentStaffMember = businessStaff.find(s => s.email === currentUser.email);
+      console.log("Found staff member by currentUser.email:", currentStaffMember);
+      defaultStaffId = currentStaffMember?.id || businessStaff[0]?.id || "";
+    } else {
+      // Owner: use first staff
+      defaultStaffId = businessStaff[0]?.id || "";
+    }
+    
+    console.log("Setting staffId to:", defaultStaffId);
+    
     setFormData((prev) => ({
       ...prev,
-      staffId: prev.staffId || businessStaff[0]?.id || "",
+      staffId: prev.staffId || defaultStaffId,
     }));
-  }, [businessStaff]);
+  }, [businessStaff, isBusinessOwner, currentUser?.email]);
 
   // Effect: Set staff filter for employees to their own ID
   useEffect(() => {
-    if (!isBusinessOwner && user?.email && businessStaff.length > 0) {
-      const currentStaffMember = businessStaff.find(s => s.email === user.email);
+    if (!isBusinessOwner && currentUser?.email && businessStaff.length > 0) {
+      const currentStaffMember = businessStaff.find(s => s.email === currentUser.email);
       if (currentStaffMember) {
         setActiveStaffFilter(currentStaffMember.id);
+        // Also set the form data to use this staff member
+        setFormData((prev) => ({
+          ...prev,
+          staffId: currentStaffMember.id,
+        }));
       }
     }
-  }, [isBusinessOwner, user?.email, businessStaff]);
+  }, [isBusinessOwner, currentUser?.email, businessStaff]);
 
   // ===== UTILITY FUNCTIONS =====
   // Display feedback message and auto-hide after 5 seconds
@@ -538,11 +614,20 @@ export default function BookingCalendar({
           return;
         }
 
-        // Determine staff for the slot (based on clicked column)
-        const staffId =
-            typeof slotInfo.resourceId === "string" && slotInfo.resourceId
-                ? slotInfo.resourceId
-                : visibleStaff[0]?.id ?? businessStaff[0]?.id ?? "";
+        // Determine staff for the slot
+        // For employees: always use their own staff ID
+        // For owners: use the clicked column staff or first staff
+        let staffId: string;
+        if (!isBusinessOwner && currentUser?.email) {
+          // Employee: find their staff profile
+          const currentStaffMember = businessStaff.find(s => s.email === currentUser.email);
+          staffId = currentStaffMember?.id || businessStaff[0]?.id || "";
+        } else {
+          // Owner: use clicked column or first staff
+          staffId = typeof slotInfo.resourceId === "string" && slotInfo.resourceId
+              ? slotInfo.resourceId
+              : visibleStaff[0]?.id ?? businessStaff[0]?.id ?? "";
+        }
 
         // Calculate the actual dragged duration in minutes
         const draggedDurationMs =
@@ -570,7 +655,7 @@ export default function BookingCalendar({
         }));
         setIsFormOpen(true);
       },
-      [view, visibleStaff, formData.service]
+      [view, visibleStaff, formData.service, isBusinessOwner, currentUser?.email, businessStaff, serviceCatalogFromDB]
   );
 
   // Handler: When clicking "Add new" button - create quick booking with current time
@@ -585,15 +670,26 @@ export default function BookingCalendar({
         60;
     const end = new Date(start.getTime() + defaultDuration * 60 * 1000);
 
+    // Determine staff ID
+    // For employees: always use their own staff ID
+    // For owners: use filtered staff or first staff
+    let staffId: string;
+    if (!isBusinessOwner && currentUser?.email) {
+      // Employee: find their staff profile
+      const currentStaffMember = businessStaff.find(s => s.email === currentUser.email);
+      staffId = currentStaffMember?.id || businessStaff[0]?.id || "";
+    } else {
+      // Owner: use filtered staff or first staff
+      staffId = activeStaffFilter === "all"
+          ? businessStaff[0]?.id ?? ""
+          : activeStaffFilter;
+    }
+
     // Set slot and open form
     setDraftSlot({ start, end });
     setFormData((prev) => ({
       ...prev,
-      // If filtering a specific staff, use that staff, otherwise use first staff
-      staffId:
-          activeStaffFilter === "all"
-              ? businessStaff[0]?.id ?? prev.staffId
-              : activeStaffFilter,
+      staffId,
       duration: defaultDuration,
     }));
     setIsFormOpen(true);
@@ -604,18 +700,31 @@ export default function BookingCalendar({
     setIsFormOpen(false);
     setDraftSlot(null);
     setFormError(null);
+    setEditingAppointmentId(null);
+    
+    // Determine the correct staff ID based on user role
+    let defaultStaffId: string;
+    if (!isBusinessOwner && currentUser?.email) {
+      // Employee: find their staff profile
+      const currentStaffMember = businessStaff.find(s => s.email === currentUser.email);
+      defaultStaffId = currentStaffMember?.id || businessStaff[0]?.id || "";
+    } else {
+      // Owner: use first staff
+      defaultStaffId = businessStaff[0]?.id || "";
+    }
+    
     // Reset form to default values
     setFormData({
       service: serviceCatalogFromDB[0]?.name || "",
       customerName: "",
       customerPhone: "",
-      staffId: businessStaff[0]?.id ?? "",
+      staffId: defaultStaffId,
       duration: serviceCatalogFromDB[0]?.duration || 60,
     });
   };
 
-  // Handler: Handle submit form for creating new booking
-  const handleCreateAppointment = (e: React.FormEvent) => {
+  // Handler: Handle submit form for creating/updating booking
+  const handleCreateAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!draftSlot) return;
 
@@ -647,14 +756,34 @@ export default function BookingCalendar({
       return;
     }
 
+    // VALIDATION 4: Check if business exists
+    if (!currentUser?.businessId) {
+      const errorMsg = "Business information is missing.";
+      setFormError(errorMsg);
+      showFeedback(errorMsg, "error");
+      return;
+    }
+
+    // VALIDATION 5: Check if service exists in database
+    const selectedServiceFromDB = dbServices?.find(
+      (svc) => svc.serviceName === formData.service
+    );
+    if (!selectedServiceFromDB) {
+      const errorMsg = "Selected service not found.";
+      setFormError(errorMsg);
+      showFeedback(errorMsg, "error");
+      return;
+    }
+
     // Calculate end time based on duration
     const endTime = new Date(
         draftSlot.start.getTime() + formData.duration * 60 * 1000
     );
 
-    // VALIDATION 4: Check if staff has conflicting appointment
+    // VALIDATION 6: Check if staff has conflicting appointment (skip if editing the same appointment)
     const overlaps = events.some(
         (event) =>
+            event.id !== editingAppointmentId && // Skip the appointment being edited
             event.staffId === formData.staffId &&
             draftSlot.start < event.end &&
             endTime > event.start
@@ -666,42 +795,157 @@ export default function BookingCalendar({
       return;
     }
 
-    // Create new booking event
-    const newEvent: BookingEvent = {
-      id: crypto.randomUUID(), // Generate random ID
-      title: formData.service,
-      service: formData.service,
-      staffId: formData.staffId,
-      location: PRIMARY_LOCATION,
-      start: draftSlot.start,
-      end: endTime,
-      status: "confirmed",
-      customer: {
-        name: formData.customerName,
-        phone: formData.customerPhone,
-      },
-      resourceId: formData.staffId,
-    };
+    try {
+      // Calculate day of week (0 = Sunday, 6 = Saturday)
+      const dayOfWeek = draftSlot.start.getDay();
+      
+      // Format date as YYYY-MM-DD
+      const appointmentDate = moment(draftSlot.start).format("YYYY-MM-DD");
+      
+      if (editingAppointmentId) {
+        // EDITING MODE: Delete old appointment and create new one
+        console.log("Updating appointment:", editingAppointmentId);
+        
+        // Delete the old appointment
+        await deleteAppointmentMutation({ id: editingAppointmentId as Id<"appointments"> });
+        
+        // Create new appointment with updated data
+        await createAppointmentMutation({
+          customerId: currentUser?.id as Id<"users"> | undefined,
+          employeeId: formData.staffId as Id<"staff">,
+          serviceId: selectedServiceFromDB._id,
+          businessId: currentUser.businessId,
+          appointmentDate,
+          appointmentStart: draftSlot.start.toISOString(),
+          appointmentEnd: endTime.toISOString(),
+          appointmentStatus: "confirmed",
+          dayOfWeek,
+          notes: "",
+          guestInfo: !currentUser?.id ? {
+            name: formData.customerName,
+            email: "",
+            phone: formData.customerPhone,
+          } : undefined,
+        });
+        
+        showFeedback("Appointment updated successfully!", "success");
+      } else {
+        // CREATING MODE: Create new appointment
+        // Log the appointment data for debugging
+        console.log("Creating appointment with:", {
+          userRole: isBusinessOwner ? "owner" : "employee",
+          userEmail: currentUser?.email,
+          staffId: formData.staffId,
+          staffName: businessStaff.find(s => s.id === formData.staffId)?.name,
+          serviceId: selectedServiceFromDB._id,
+          serviceName: selectedServiceFromDB.serviceName,
+          businessId: currentUser.businessId,
+          appointmentDate,
+          customerName: formData.customerName,
+        });
+        
+        // Create appointment in database
+        await createAppointmentMutation({
+          customerId: currentUser?.id as Id<"users"> | undefined,
+          employeeId: formData.staffId as Id<"staff">,
+          serviceId: selectedServiceFromDB._id,
+          businessId: currentUser.businessId,
+          appointmentDate,
+          appointmentStart: draftSlot.start.toISOString(),
+          appointmentEnd: endTime.toISOString(),
+          appointmentStatus: "confirmed",
+          dayOfWeek,
+          notes: "",
+          guestInfo: !currentUser?.id ? {
+            name: formData.customerName,
+            email: "",
+            phone: formData.customerPhone,
+          } : undefined,
+        });
 
-    // Automatically add new customer to list if not exists
-    // (check by phone number)
-    const existingCustomer = getCustomerByPhone(formData.customerPhone);
-    if (!existingCustomer) {
-      addCustomer(formData.customerName, formData.customerPhone);
+        // Automatically add new customer to list if not exists
+        // (check by phone number)
+        const existingCustomer = getCustomerByPhone(formData.customerPhone);
+        if (!existingCustomer) {
+          addCustomer(formData.customerName, formData.customerPhone);
+        }
+
+        showFeedback("Appointment created successfully!", "success");
+      }
+
+      // Show success message
+      setFormError(null);
+
+      // Close form after 500ms so user can see the message
+      setTimeout(() => {
+        closeForm();
+      }, 500);
+    } catch (error) {
+      console.error("Error saving appointment:", error);
+      const errorMsg = editingAppointmentId 
+        ? "Failed to update appointment. Please try again."
+        : "Failed to create appointment. Please try again.";
+      setFormError(errorMsg);
+      showFeedback(errorMsg, "error");
     }
+  };
 
-    // Add appointment to context and local state
-    addAppointment(newEvent);
-    setEvents((prev) => [...prev, newEvent]);
+  // Handler: Delete appointment
+  const handleDeleteAppointment = async () => {
+    if (!selectedEvent) return;
+    
+    // Confirm deletion
+    if (!window.confirm("Are you sure you want to delete this appointment?")) {
+      return;
+    }
+    
+    try {
+      // Delete from database
+      await deleteAppointmentMutation({ id: selectedEvent.id as Id<"appointments"> });
+      
+      // Remove from local state
+      setEvents((prev) => prev.filter((event) => event.id !== selectedEvent.id));
+      
+      // Show success message
+      showFeedback("Appointment deleted successfully!", "success");
+      
+      // Close modal
+      setSelectedEvent(null);
+    } catch (error) {
+      console.error("Error deleting appointment:", error);
+      showFeedback("Failed to delete appointment. Please try again.", "error");
+    }
+  };
 
-    // Show success message
-    setFormError(null);
-    showFeedback("Appointment created successfully!", "success");
-
-    // Close form after 500ms so user can see the message
-    setTimeout(() => {
-      closeForm();
-    }, 500);
+  // Handler: Edit appointment - populate form with existing data
+  const handleEditAppointment = () => {
+    if (!selectedEvent) return;
+    
+    // Find the service duration
+    const service = serviceCatalogFromDB.find(s => s.name === selectedEvent.service);
+    const duration = service?.duration || 60;
+    
+    // Populate form with existing appointment data
+    setFormData({
+      service: selectedEvent.service,
+      customerName: selectedEvent.customer.name,
+      customerPhone: selectedEvent.customer.phone,
+      staffId: selectedEvent.staffId,
+      duration,
+    });
+    
+    // Set the time slot
+    setDraftSlot({
+      start: selectedEvent.start,
+      end: selectedEvent.end,
+    });
+    
+    // Set editing mode
+    setEditingAppointmentId(selectedEvent.id);
+    
+    // Close details modal and open form
+    setSelectedEvent(null);
+    setIsFormOpen(true);
   };
 
   // Helper: Create label to display on toolbar depending on view
@@ -1014,7 +1258,7 @@ export default function BookingCalendar({
                       </div>
                     </div>
 
-                    {/* 2-column grid: Staff and Location */}
+                    {/* 2-column grid: Staff and Business */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
                         <p className="text-xs font-semibold uppercase text-slate-500">
@@ -1026,10 +1270,10 @@ export default function BookingCalendar({
                       </div>
                       <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
                         <p className="text-xs font-semibold uppercase text-slate-500">
-                          Location
+                          Business
                         </p>
                         <p className="text-sm font-medium text-slate-800">
-                          {selectedEvent.location}
+                          {businessName}
                         </p>
                       </div>
                     </div>
@@ -1042,6 +1286,24 @@ export default function BookingCalendar({
                       <p className="text-sm font-medium text-slate-800">
                         {selectedEvent.customer.phone}
                       </p>
+                    </div>
+                    
+                    {/* Action buttons */}
+                    <div className="flex gap-3 pt-2">
+                      <button
+                          onClick={handleEditAppointment}
+                          className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/20 transition hover:bg-slate-800"
+                      >
+                        <Edit size={18} />
+                        Edit Appointment
+                      </button>
+                      <button
+                          onClick={handleDeleteAppointment}
+                          className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-red-600/20 transition hover:bg-red-700"
+                      >
+                        <Trash2 size={18} />
+                        Delete
+                      </button>
                     </div>
                   </div>
                 </motion.div>
@@ -1065,7 +1327,7 @@ export default function BookingCalendar({
                   <div className="mb-6 flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-slate-900">
-                        New Appointment
+                        {editingAppointmentId ? "Edit Appointment" : "New Appointment"}
                       </h3>
                     </div>
                     {/* Close form button */}
@@ -1229,14 +1491,18 @@ export default function BookingCalendar({
                             </>
                           ) : (
                             // Staff member sees only their own name (read-only)
-                            <div className="relative w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 pl-9 text-sm font-medium text-slate-800">
-                              {currentUser?.name || businessStaff[0]?.name || "N/A"}
-                              {/* Scissors icon on the left */}
-                              <Scissors
-                                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                                  size={16}
-                              />
-                            </div>
+                            <>
+                              <div className="relative w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 pl-9 text-sm font-medium text-slate-800">
+                                {businessStaff.find(s => s.id === formData.staffId)?.name || currentUser?.name || "N/A"}
+                                {/* Scissors icon on the left */}
+                                <Scissors
+                                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                    size={16}
+                                />
+                              </div>
+                              {/* Hidden input to maintain the staff ID */}
+                              <input type="hidden" value={formData.staffId} />
+                            </>
                           )}
                         </div>
                       </div>
@@ -1413,7 +1679,7 @@ export default function BookingCalendar({
                         type="submit"
                         className="mt-2 w-full rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/20 transition hover:bg-slate-800"
                     >
-                      Confirm Booking
+                      {editingAppointmentId ? "Update Appointment" : "Confirm Booking"}
                     </button>
                   </form>
                 </motion.div>
