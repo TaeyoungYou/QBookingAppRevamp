@@ -90,6 +90,7 @@ interface BookingEvent {
   status: BookingStatus; // Booking status
   customer: {
     name: string; // Customer name
+    email: string; // Customer email
     phone: string; // Phone number
   };
   resourceId: string; // Resource ID (used for Day view)
@@ -114,7 +115,7 @@ const initialEvents: BookingEvent[] = [
     start: new Date(2025, 10, 13, 9, 0), // Nov 13, 2025, 9:00 AM
     end: new Date(2025, 10, 13, 10, 0), // Nov 13, 2025, 10:00 AM
     status: "confirmed",
-    customer: { name: "Brenda Massey", phone: "012-345-6789" },
+    customer: { name: "Brenda Massey", email: "brenda.massey@example.com", phone: "012-345-6789" },
     resourceId: "mary",
   },
   {
@@ -126,7 +127,7 @@ const initialEvents: BookingEvent[] = [
     start: new Date(2025, 10, 13, 9, 0),
     end: new Date(2025, 10, 13, 10, 0),
     status: "confirmed",
-    customer: { name: "Zachary Kelley", phone: "014-444-2288" },
+    customer: { name: "Zachary Kelley", email: "zachary.kelley@example.com", phone: "014-444-2288" },
     resourceId: "john",
   },
   {
@@ -138,7 +139,7 @@ const initialEvents: BookingEvent[] = [
     start: new Date(2025, 10, 13, 9, 45),
     end: new Date(2025, 10, 13, 11, 0),
     status: "confirmed",
-    customer: { name: "Diana Campos", phone: "010-919-1212" },
+    customer: { name: "Diana Campos", email: "diana.campos@example.com", phone: "010-919-1212" },
     resourceId: "michael",
   },
   {
@@ -150,7 +151,7 @@ const initialEvents: BookingEvent[] = [
     start: new Date(2025, 10, 13, 11, 0),
     end: new Date(2025, 10, 13, 12, 0),
     status: "confirmed",
-    customer: { name: "Beverly Brown", phone: "010-222-3334" },
+    customer: { name: "Beverly Brown", email: "beverly.brown@example.com", phone: "010-222-3334" },
     resourceId: "mary",
   },
 ];
@@ -371,6 +372,7 @@ export default function BookingCalendar({
   const [formData, setFormData] = useState({
     service: "", // Will be set when services load
     customerName: "", // Customer name
+    customerEmail: "", // Customer email
     customerPhone: "", // Phone number
     staffId: "", // Staff member ID - will be set based on user role
     duration: 60, // Default duration
@@ -423,6 +425,7 @@ export default function BookingCalendar({
       
       // Get customer info from guestInfo or user
       const customerName = apt.guestInfo?.name || "Customer";
+      const customerEmail = apt.guestInfo?.email || "";
       const customerPhone = apt.guestInfo?.phone || "";
       
       return {
@@ -436,6 +439,7 @@ export default function BookingCalendar({
         status: apt.appointmentStatus as BookingStatus,
         customer: {
           name: customerName,
+          email: customerEmail,
           phone: customerPhone,
         },
         resourceId: apt.employeeId,
@@ -717,6 +721,7 @@ export default function BookingCalendar({
     setFormData({
       service: serviceCatalogFromDB[0]?.name || "",
       customerName: "",
+      customerEmail: "",
       customerPhone: "",
       staffId: defaultStaffId,
       duration: serviceCatalogFromDB[0]?.duration || 60,
@@ -737,6 +742,17 @@ export default function BookingCalendar({
       setFormError(errorMsg);
       showFeedback(errorMsg, "error");
       return;
+    }
+    
+    // VALIDATION 1b: Validate email format if provided
+    if (formData.customerEmail.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.customerEmail)) {
+        const errorMsg = "Please provide a valid email address.";
+        setFormError(errorMsg);
+        showFeedback(errorMsg, "error");
+        return;
+      }
     }
 
     // VALIDATION 2: Check minimum duration
@@ -821,11 +837,11 @@ export default function BookingCalendar({
           appointmentStatus: "confirmed",
           dayOfWeek,
           notes: "",
-          guestInfo: !currentUser?.id ? {
+          guestInfo: {
             name: formData.customerName,
-            email: "",
+            email: formData.customerEmail,
             phone: formData.customerPhone,
-          } : undefined,
+          },
         });
         
         showFeedback("Appointment updated successfully!", "success");
@@ -856,11 +872,11 @@ export default function BookingCalendar({
           appointmentStatus: "confirmed",
           dayOfWeek,
           notes: "",
-          guestInfo: !currentUser?.id ? {
+          guestInfo: {
             name: formData.customerName,
-            email: "",
+            email: formData.customerEmail,
             phone: formData.customerPhone,
-          } : undefined,
+          },
         });
 
         // Automatically add new customer to list if not exists
@@ -921,14 +937,15 @@ export default function BookingCalendar({
   const handleEditAppointment = () => {
     if (!selectedEvent) return;
     
-    // Find the service duration
-    const service = serviceCatalogFromDB.find(s => s.name === selectedEvent.service);
-    const duration = service?.duration || 60;
+    // Calculate the actual duration from the appointment's start and end times
+    const durationMs = selectedEvent.end.getTime() - selectedEvent.start.getTime();
+    const duration = Math.round(durationMs / (60 * 1000)); // Convert to minutes
     
     // Populate form with existing appointment data
     setFormData({
       service: selectedEvent.service,
       customerName: selectedEvent.customer.name,
+      customerEmail: selectedEvent.customer.email || "",
       customerPhone: selectedEvent.customer.phone,
       staffId: selectedEvent.staffId,
       duration,
@@ -1278,14 +1295,24 @@ export default function BookingCalendar({
                       </div>
                     </div>
 
-                    {/* Phone number */}
-                    <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                      <p className="text-xs font-semibold uppercase text-slate-500">
-                        Phone
-                      </p>
-                      <p className="text-sm font-medium text-slate-800">
-                        {selectedEvent.customer.phone}
-                      </p>
+                    {/* 2-column grid: Phone and Email */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+                        <p className="text-xs font-semibold uppercase text-slate-500">
+                          Phone
+                        </p>
+                        <p className="text-sm font-medium text-slate-800">
+                          {selectedEvent.customer.phone || "N/A"}
+                        </p>
+                      </div>
+                      <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+                        <p className="text-xs font-semibold uppercase text-slate-500">
+                          Email
+                        </p>
+                        <p className="text-sm font-medium text-slate-800 break-all">
+                          {selectedEvent.customer.email || "N/A"}
+                        </p>
+                      </div>
                     </div>
                     
                     {/* Action buttons */}
@@ -1523,6 +1550,25 @@ export default function BookingCalendar({
                               }))
                           }
                           placeholder="Enter customer name"
+                          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 focus:border-slate-400 focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Customer email input */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-slate-500">
+                        Customer Email <span className="text-slate-400 font-normal">(optional)</span>
+                      </label>
+                      <input
+                          type="email"
+                          value={formData.customerEmail}
+                          onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                customerEmail: e.target.value,
+                              }))
+                          }
+                          placeholder="customer@example.com"
                           className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 focus:border-slate-400 focus:outline-none"
                       />
                     </div>
