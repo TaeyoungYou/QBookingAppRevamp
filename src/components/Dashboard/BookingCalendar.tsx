@@ -22,6 +22,8 @@ import {
   Scissors,
   User,
   X,
+  Trash2,
+  Edit,
 } from "lucide-react";
 // Import framer-motion for animations
 import { motion, AnimatePresence } from "framer-motion";
@@ -31,12 +33,12 @@ import {
   type StaffMember,
   type StaffStatus,
 } from "../../context/StaffContext";
-import { useAppointments } from "../../context/AppointmentsContext";
 import { useCustomers } from "../../context/CustomersContext";
 import { useUser } from "../../context/UserContext";
 import { useCurrentUser, useBusinessQueries } from "../../hooks/useBusinessQueries";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
 
 // Color palette for staff accent colors
 const palette = ["#8ecae6", "#f4a261", "#90be6d", "#cdb4db", "#ffb703"];
@@ -53,24 +55,7 @@ const BUSINESS_HOURS = { start: 9, end: 20 }; // Business hours: 9 AM - 8 PM
 const PRIMARY_LOCATION = "Polish Pro Studio"; // Primary location name
 
 // ===== SERVICE CATALOG =====
-// Catalog containing all services with their duration and colors
-const serviceCatalog = [
-  { name: "Blow Dry", duration: 60, color: "#8ecae6" }, // Blow dry - 60 minutes
-  { name: "Beard Grooming", duration: 60, color: "#f4a261" }, // Beard grooming - 60 minutes
-  { name: "Balinese Massage", duration: 75, color: "#7cd4c5" }, // Balinese massage - 75 minutes
-  { name: "Hair Colouring", duration: 60, color: "#f7aef8" }, // Hair coloring - 60 minutes
-  { name: "Manicure & Pedicure", duration: 60, color: "#ffcb77" }, // Manicure & Pedicure - 60 minutes
-];
-
-// Create a map object for easy access to colors by service name
-// Example: serviceColorMap["Blow Dry"] = "#8ecae6"
-const serviceColorMap = serviceCatalog.reduce<Record<string, string>>(
-    (acc, item) => {
-      acc[item.name] = item.color;
-      return acc;
-    },
-    {}
-);
+// Services will be loaded from database - no hardcoded catalog needed
 
 // ===== TYPE DEFINITIONS =====
 // Booking status types
@@ -88,6 +73,7 @@ interface BookingEvent {
   status: BookingStatus; // Booking status
   customer: {
     name: string; // Customer name
+    email: string; // Customer email
     phone: string; // Phone number
   };
   resourceId: string; // Resource ID (used for Day view)
@@ -100,72 +86,19 @@ interface BookingCalendarProps {
   selectedLocation: string; // Selected location for filtering
 }
 
-// ===== SAMPLE DATA =====
-// List of initial bookings (demo data)
-const initialEvents: BookingEvent[] = [
-  {
-    id: "evt-1",
-    title: "Blow Dry",
-    service: "Blow Dry",
-    staffId: "mary",
-    location: PRIMARY_LOCATION,
-    start: new Date(2025, 10, 13, 9, 0), // Nov 13, 2025, 9:00 AM
-    end: new Date(2025, 10, 13, 10, 0), // Nov 13, 2025, 10:00 AM
-    status: "confirmed",
-    customer: { name: "Brenda Massey", phone: "012-345-6789" },
-    resourceId: "mary",
-  },
-  {
-    id: "evt-2",
-    title: "Beard Grooming",
-    service: "Beard Grooming",
-    staffId: "john",
-    location: PRIMARY_LOCATION,
-    start: new Date(2025, 10, 13, 9, 0),
-    end: new Date(2025, 10, 13, 10, 0),
-    status: "confirmed",
-    customer: { name: "Zachary Kelley", phone: "014-444-2288" },
-    resourceId: "john",
-  },
-  {
-    id: "evt-3",
-    title: "Balinese Massage",
-    service: "Balinese Massage",
-    staffId: "michael",
-    location: PRIMARY_LOCATION,
-    start: new Date(2025, 10, 13, 9, 45),
-    end: new Date(2025, 10, 13, 11, 0),
-    status: "confirmed",
-    customer: { name: "Diana Campos", phone: "010-919-1212" },
-    resourceId: "michael",
-  },
-  {
-    id: "evt-4",
-    title: "Hair Colouring",
-    service: "Hair Colouring",
-    staffId: "mary",
-    location: PRIMARY_LOCATION,
-    start: new Date(2025, 10, 13, 11, 0),
-    end: new Date(2025, 10, 13, 12, 0),
-    status: "confirmed",
-    customer: { name: "Beverly Brown", phone: "010-222-3334" },
-    resourceId: "mary",
-  },
-];
-
 // ===== HELPER FUNCTIONS =====
 // Check if a date is a closed day
 const isClosedDay = (date: Date) => CLOSED_DAYS.includes(date.getDay());
 
 // ===== CUSTOM COMPONENTS =====
 // Component to display an event on the calendar
-const CustomEvent = ({ event }: { event: BookingEvent }) => {
+const CustomEvent = ({ event, colorMap }: { event: BookingEvent; colorMap: Record<string, string> }) => {
   return (
       <div
           className="h-full w-full rounded-md px-3 py-2 text-white shadow-sm"
           style={{
             // Use color corresponding to the service
-            backgroundColor: serviceColorMap[event.service] ?? "#8ecae6",
+            backgroundColor: colorMap[event.service] ?? "#8ecae6",
           }}
       >
         {/* Display time */}
@@ -225,11 +158,14 @@ export default function BookingCalendar({
                                         }: BookingCalendarProps) {
   // ===== CONTEXTS & HOOKS =====
   const { staff } = useStaffDirectory(); // Get staff list from context (fallback)
-  const { addAppointment } = useAppointments(); // Function to add appointment to context
   const { addCustomer, getCustomerByPhone } = useCustomers(); // Functions to manage customers
   const { user } = useUser(); // Get current user from local context
   const { user: currentUser } = useCurrentUser(); // Get current user with businessId from database
   const { getbusinesses } = useBusinessQueries(); // Get business data
+  
+  // Import mutation for creating appointments in database
+  const createAppointmentMutation = useMutation(api.functions.appointments.addAppointment);
+  const deleteAppointmentMutation = useMutation(api.functions.appointments.deleteAppointment);
   
   // Check if user is business owner (from database, not local context)
   const isBusinessOwner = currentUser?.status === "owner";
@@ -240,9 +176,74 @@ export default function BookingCalendar({
     currentUser?.businessId ? { businessId: currentUser.businessId } : "skip"
   );
   
+  // Fetch current user's staff profile if they're an employee
+  const currentUserStaffProfile = useQuery(
+    api.functions.staffs.getStaffByEmail,
+    currentUser?.email && currentUser?.status === "employee" ? { email: currentUser.email } : "skip"
+  );
+  
+  // Fetch services from database by businessId
+  const dbServices = useQuery(
+    api.functions.services.getServicesByBusiness,
+    currentUser?.businessId ? { businessId: currentUser.businessId } : "skip"
+  );
+  
+  // Fetch appointments from database by businessId
+  const dbAppointments = useQuery(
+    api.functions.appointments.getAppointmentsByBusiness,
+    currentUser?.businessId ? { businessId: currentUser.businessId } : "skip"
+  );
+  
+  // Convert database services to service catalog format
+  const serviceCatalogFromDB = useMemo(() => {
+    if (!dbServices || dbServices.length === 0) return []; // Return empty array, no fallback
+    
+    return dbServices.map((service, index) => ({
+      name: service.serviceName,
+      duration: service.duration ? parseInt(service.duration) : 60, // Default to 60 minutes
+      color: palette[index % palette.length], // Assign colors cyclically
+    }));
+  }, [dbServices]);
+  
+  // Check if services are available from database
+  const hasServices = dbServices && dbServices.length > 0;
+  
+  // Create a map object for easy access to colors by service name from DB
+  const serviceColorMapFromDB = useMemo(() => {
+    return serviceCatalogFromDB.reduce<Record<string, string>>(
+      (acc, item) => {
+        acc[item.name] = item.color;
+        return acc;
+      },
+      {}
+    );
+  }, [serviceCatalogFromDB]);
+  
   // Convert database staff to StaffMember format
   const businessStaff: StaffMember[] = useMemo(() => {
-    if (!dbStaff) return staff; // Fallback to context staff if no data
+    // If user is an employee and staff list is empty or doesn't include them, create entry from currentUser
+    if (!isBusinessOwner && currentUser && currentUser.email) {
+      // Check if current user is in the staff list
+      const isInStaffList = dbStaff?.some(s => s.email === currentUser.email);
+      
+      if (!isInStaffList) {
+        // Create a staff member entry from the current user or their staff profile
+        const userStaffMember: StaffMember = {
+          id: String(currentUserStaffProfile?._id || currentUser.id || "temp-user-id"),
+          name: currentUserStaffProfile?.name || currentUser.name || "User",
+          role: currentUserStaffProfile?.role || "Staff",
+          avatar: currentUserStaffProfile?.image || "",
+          email: currentUser.email,
+          phone: currentUser.phone || "",
+          accentColor: palette[0],
+          status: "active",
+        };
+        return [userStaffMember];
+      }
+    }
+    
+    // For owners or when staff list exists
+    if (!dbStaff || dbStaff.length === 0) return staff; // Fallback to context staff if no data
     
     return dbStaff.map((s, index) => ({
       id: s._id,
@@ -254,7 +255,7 @@ export default function BookingCalendar({
       accentColor: palette[index % palette.length], // Assign colors cyclically
       status: (s.status as StaffStatus) || "active",
     }));
-  }, [dbStaff, staff]);
+  }, [dbStaff, staff, isBusinessOwner, currentUser, currentUserStaffProfile]);
   
   // Get business name from the current user's business
   const currentBusiness = getbusinesses?.find(
@@ -270,8 +271,8 @@ export default function BookingCalendar({
       return businessStaff; // Owner sees all staff
     }
     // Employee sees only themselves
-    return businessStaff.filter((member) => member.email === user?.email);
-  }, [businessStaff, isBusinessOwner, user?.email]);
+    return businessStaff.filter((member) => member.email === currentUser?.email);
+  }, [businessStaff, isBusinessOwner, currentUser?.email]);
 
   // ===== STATE MANAGEMENT =====
   // State managing current view (Day/Week/Month)
@@ -281,7 +282,7 @@ export default function BookingCalendar({
   const [date, setDate] = useState(new Date());
 
   // State managing list of all events/bookings
-  const [events, setEvents] = useState<BookingEvent[]>(initialEvents);
+  const [events, setEvents] = useState<BookingEvent[]>([]);
 
   // State managing currently selected event for viewing details
   const [selectedEvent, setSelectedEvent] = useState<BookingEvent | null>(null);
@@ -293,23 +294,27 @@ export default function BookingCalendar({
   const [draftSlot, setDraftSlot] = useState<{ start: Date; end: Date } | null>(
       null
   );
+  
+  // State to track if we're editing an existing appointment
+  const [editingAppointmentId, setEditingAppointmentId] = useState<string | null>(null);
 
   // State managing booking form data
   const [formData, setFormData] = useState({
-    service: serviceCatalog[0].name, // Default service
+    service: "", // Will be set when services load
     customerName: "", // Customer name
+    customerEmail: "", // Customer email
     customerPhone: "", // Phone number
-    staffId: businessStaff[0]?.id ?? "", // Staff member ID
-    duration: serviceCatalog[0].duration, // Service duration
+    staffId: "", // Staff member ID - will be set based on user role
+    duration: 60, // Default duration
   });
 
   // State filtering staff displayed in header
   // For employees: automatically set to their own ID
   // For owners: default to "all"
   const [activeStaffFilter, setActiveStaffFilter] = useState<string>(() => {
-    if (!isBusinessOwner && user?.email) {
+    if (!isBusinessOwner && currentUser?.email) {
       // Find the staff member by email
-      const currentStaffMember = businessStaff.find(s => s.email === user.email);
+      const currentStaffMember = businessStaff.find(s => s.email === currentUser.email);
       return currentStaffMember?.id || "all";
     }
     return "all";
@@ -326,6 +331,53 @@ export default function BookingCalendar({
 
   // State managing date picker visibility
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  // ===== EFFECTS =====
+  // Update form data when services are loaded from database
+  useEffect(() => {
+    if (serviceCatalogFromDB.length > 0) {
+      setFormData(prev => ({
+        ...prev,
+        service: prev.service || serviceCatalogFromDB[0].name,
+        duration: prev.service ? prev.duration : serviceCatalogFromDB[0].duration,
+      }));
+    }
+  }, [serviceCatalogFromDB]);
+  
+  // Load appointments from database and convert to calendar events
+  useEffect(() => {
+    if (!dbAppointments || !dbServices || !businessStaff.length) return;
+    
+    const convertedEvents: BookingEvent[] = dbAppointments.map((apt) => {
+      // Find the service name
+      const service = dbServices.find(s => s._id === apt.serviceId);
+      const serviceName = service?.serviceName || "Unknown Service";
+      
+      // Get customer info from guestInfo or user
+      const customerName = apt.guestInfo?.name || "Customer";
+      const customerEmail = apt.guestInfo?.email || "";
+      const customerPhone = apt.guestInfo?.phone || "";
+      
+      return {
+        id: apt._id,
+        title: serviceName,
+        service: serviceName,
+        staffId: apt.employeeId,
+        location: PRIMARY_LOCATION,
+        start: new Date(apt.appointmentStart),
+        end: new Date(apt.appointmentEnd),
+        status: apt.appointmentStatus as BookingStatus,
+        customer: {
+          name: customerName,
+          email: customerEmail,
+          phone: customerPhone,
+        },
+        resourceId: apt.employeeId,
+      };
+    });
+    
+    setEvents(convertedEvents);
+  }, [dbAppointments, dbServices, businessStaff]);
 
   // ===== COMPUTED VALUES =====
   // Calculate list of staff to display based on filter and user role
@@ -350,21 +402,50 @@ export default function BookingCalendar({
   // ===== EFFECTS =====
   // Effect: Update staffId in form when staff list changes
   useEffect(() => {
+    if (businessStaff.length === 0) return;
+    
+    // Debug logging
+    console.log("Setting default staff ID:", {
+      isBusinessOwner,
+      userEmail: user?.email,
+      currentUserEmail: currentUser?.email,
+      businessStaff: businessStaff.map(s => ({ id: s.id, name: s.name, email: s.email })),
+    });
+    
+    // Determine the correct staff ID based on user role
+    let defaultStaffId: string;
+    if (!isBusinessOwner && currentUser?.email) {
+      // Employee: find their staff profile using currentUser.email
+      const currentStaffMember = businessStaff.find(s => s.email === currentUser.email);
+      console.log("Found staff member by currentUser.email:", currentStaffMember);
+      defaultStaffId = currentStaffMember?.id || businessStaff[0]?.id || "";
+    } else {
+      // Owner: use first staff
+      defaultStaffId = businessStaff[0]?.id || "";
+    }
+    
+    console.log("Setting staffId to:", defaultStaffId);
+    
     setFormData((prev) => ({
       ...prev,
-      staffId: prev.staffId || businessStaff[0]?.id || "",
+      staffId: prev.staffId || defaultStaffId,
     }));
-  }, [businessStaff]);
+  }, [businessStaff, isBusinessOwner, currentUser?.email]);
 
   // Effect: Set staff filter for employees to their own ID
   useEffect(() => {
-    if (!isBusinessOwner && user?.email && businessStaff.length > 0) {
-      const currentStaffMember = businessStaff.find(s => s.email === user.email);
+    if (!isBusinessOwner && currentUser?.email && businessStaff.length > 0) {
+      const currentStaffMember = businessStaff.find(s => s.email === currentUser.email);
       if (currentStaffMember) {
         setActiveStaffFilter(currentStaffMember.id);
+        // Also set the form data to use this staff member
+        setFormData((prev) => ({
+          ...prev,
+          staffId: currentStaffMember.id,
+        }));
       }
     }
-  }, [isBusinessOwner, user?.email, businessStaff]);
+  }, [isBusinessOwner, currentUser?.email, businessStaff]);
 
   // ===== UTILITY FUNCTIONS =====
   // Display feedback message and auto-hide after 5 seconds
@@ -467,11 +548,20 @@ export default function BookingCalendar({
           return;
         }
 
-        // Determine staff for the slot (based on clicked column)
-        const staffId =
-            typeof slotInfo.resourceId === "string" && slotInfo.resourceId
-                ? slotInfo.resourceId
-                : visibleStaff[0]?.id ?? businessStaff[0]?.id ?? "";
+        // Determine staff for the slot
+        // For employees: always use their own staff ID
+        // For owners: use the clicked column staff or first staff
+        let staffId: string;
+        if (!isBusinessOwner && currentUser?.email) {
+          // Employee: find their staff profile
+          const currentStaffMember = businessStaff.find(s => s.email === currentUser.email);
+          staffId = currentStaffMember?.id || businessStaff[0]?.id || "";
+        } else {
+          // Owner: use clicked column or first staff
+          staffId = typeof slotInfo.resourceId === "string" && slotInfo.resourceId
+              ? slotInfo.resourceId
+              : visibleStaff[0]?.id ?? businessStaff[0]?.id ?? "";
+        }
 
         // Calculate the actual dragged duration in minutes
         const draggedDurationMs =
@@ -482,8 +572,8 @@ export default function BookingCalendar({
 
         // Use the dragged duration, or fall back to service default if drag was too short
         const selectedService =
-            serviceCatalog.find((svc) => svc.name === formData.service) ||
-            serviceCatalog[0];
+            serviceCatalogFromDB.find((svc) => svc.name === formData.service) ||
+            serviceCatalogFromDB[0];
         const actualDuration =
             draggedDurationMinutes >= 15
                 ? draggedDurationMinutes
@@ -494,12 +584,12 @@ export default function BookingCalendar({
         setFormData((prev) => ({
           ...prev,
           staffId,
-          service: prev.service || serviceCatalog[0].name,
+          service: prev.service || serviceCatalogFromDB[0]?.name || "",
           duration: actualDuration,
         }));
         setIsFormOpen(true);
       },
-      [view, visibleStaff, formData.service]
+      [view, visibleStaff, formData.service, isBusinessOwner, currentUser?.email, businessStaff, serviceCatalogFromDB]
   );
 
   // Handler: When clicking "Add new" button - create quick booking with current time
@@ -510,19 +600,30 @@ export default function BookingCalendar({
 
     // Get default duration of service
     const defaultDuration =
-        serviceCatalog.find((svc) => svc.name === formData.service)?.duration ||
+        serviceCatalogFromDB.find((svc) => svc.name === formData.service)?.duration ||
         60;
     const end = new Date(start.getTime() + defaultDuration * 60 * 1000);
+
+    // Determine staff ID
+    // For employees: always use their own staff ID
+    // For owners: use filtered staff or first staff
+    let staffId: string;
+    if (!isBusinessOwner && currentUser?.email) {
+      // Employee: find their staff profile
+      const currentStaffMember = businessStaff.find(s => s.email === currentUser.email);
+      staffId = currentStaffMember?.id || businessStaff[0]?.id || "";
+    } else {
+      // Owner: use filtered staff or first staff
+      staffId = activeStaffFilter === "all"
+          ? businessStaff[0]?.id ?? ""
+          : activeStaffFilter;
+    }
 
     // Set slot and open form
     setDraftSlot({ start, end });
     setFormData((prev) => ({
       ...prev,
-      // If filtering a specific staff, use that staff, otherwise use first staff
-      staffId:
-          activeStaffFilter === "all"
-              ? businessStaff[0]?.id ?? prev.staffId
-              : activeStaffFilter,
+      staffId,
       duration: defaultDuration,
     }));
     setIsFormOpen(true);
@@ -533,18 +634,32 @@ export default function BookingCalendar({
     setIsFormOpen(false);
     setDraftSlot(null);
     setFormError(null);
+    setEditingAppointmentId(null);
+    
+    // Determine the correct staff ID based on user role
+    let defaultStaffId: string;
+    if (!isBusinessOwner && currentUser?.email) {
+      // Employee: find their staff profile
+      const currentStaffMember = businessStaff.find(s => s.email === currentUser.email);
+      defaultStaffId = currentStaffMember?.id || businessStaff[0]?.id || "";
+    } else {
+      // Owner: use first staff
+      defaultStaffId = businessStaff[0]?.id || "";
+    }
+    
     // Reset form to default values
     setFormData({
-      service: serviceCatalog[0].name,
+      service: serviceCatalogFromDB[0]?.name || "",
       customerName: "",
+      customerEmail: "",
       customerPhone: "",
-      staffId: businessStaff[0]?.id ?? "",
-      duration: serviceCatalog[0].duration,
+      staffId: defaultStaffId,
+      duration: serviceCatalogFromDB[0]?.duration || 60,
     });
   };
 
-  // Handler: Handle submit form for creating new booking
-  const handleCreateAppointment = (e: React.FormEvent) => {
+  // Handler: Handle submit form for creating/updating booking
+  const handleCreateAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!draftSlot) return;
 
@@ -557,6 +672,17 @@ export default function BookingCalendar({
       setFormError(errorMsg);
       showFeedback(errorMsg, "error");
       return;
+    }
+    
+    // VALIDATION 1b: Validate email format if provided
+    if (formData.customerEmail.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.customerEmail)) {
+        const errorMsg = "Please provide a valid email address.";
+        setFormError(errorMsg);
+        showFeedback(errorMsg, "error");
+        return;
+      }
     }
 
     // VALIDATION 2: Check minimum duration
@@ -576,14 +702,34 @@ export default function BookingCalendar({
       return;
     }
 
+    // VALIDATION 4: Check if business exists
+    if (!currentUser?.businessId) {
+      const errorMsg = "Business information is missing.";
+      setFormError(errorMsg);
+      showFeedback(errorMsg, "error");
+      return;
+    }
+
+    // VALIDATION 5: Check if service exists in database
+    const selectedServiceFromDB = dbServices?.find(
+      (svc) => svc.serviceName === formData.service
+    );
+    if (!selectedServiceFromDB) {
+      const errorMsg = "Selected service not found.";
+      setFormError(errorMsg);
+      showFeedback(errorMsg, "error");
+      return;
+    }
+
     // Calculate end time based on duration
     const endTime = new Date(
         draftSlot.start.getTime() + formData.duration * 60 * 1000
     );
 
-    // VALIDATION 4: Check if staff has conflicting appointment
+    // VALIDATION 6: Check if staff has conflicting appointment (skip if editing the same appointment)
     const overlaps = events.some(
         (event) =>
+            event.id !== editingAppointmentId && // Skip the appointment being edited
             event.staffId === formData.staffId &&
             draftSlot.start < event.end &&
             endTime > event.start
@@ -595,42 +741,158 @@ export default function BookingCalendar({
       return;
     }
 
-    // Create new booking event
-    const newEvent: BookingEvent = {
-      id: crypto.randomUUID(), // Generate random ID
-      title: formData.service,
-      service: formData.service,
-      staffId: formData.staffId,
-      location: PRIMARY_LOCATION,
-      start: draftSlot.start,
-      end: endTime,
-      status: "confirmed",
-      customer: {
-        name: formData.customerName,
-        phone: formData.customerPhone,
-      },
-      resourceId: formData.staffId,
-    };
+    try {
+      // Calculate day of week (0 = Sunday, 6 = Saturday)
+      const dayOfWeek = draftSlot.start.getDay();
+      
+      // Format date as YYYY-MM-DD
+      const appointmentDate = moment(draftSlot.start).format("YYYY-MM-DD");
+      
+      if (editingAppointmentId) {
+        // EDITING MODE: Delete old appointment and create new one
+        console.log("Updating appointment:", editingAppointmentId);
+        
+        // Delete the old appointment
+        await deleteAppointmentMutation({ id: editingAppointmentId as Id<"appointments"> });
+        
+        // Create new appointment with updated data
+        await createAppointmentMutation({
+          customerId: currentUser?.id as Id<"users"> | undefined,
+          employeeId: formData.staffId as Id<"staff">,
+          serviceId: selectedServiceFromDB._id,
+          businessId: currentUser.businessId,
+          appointmentDate,
+          appointmentStart: draftSlot.start.toISOString(),
+          appointmentEnd: endTime.toISOString(),
+          appointmentStatus: "confirmed",
+          dayOfWeek,
+          notes: "",
+          guestInfo: {
+            name: formData.customerName,
+            email: formData.customerEmail,
+            phone: formData.customerPhone,
+          },
+        });
+        
+        showFeedback("Appointment updated successfully!", "success");
+      } else {
+        // CREATING MODE: Create new appointment
+        // Log the appointment data for debugging
+        console.log("Creating appointment with:", {
+          userRole: isBusinessOwner ? "owner" : "employee",
+          userEmail: currentUser?.email,
+          staffId: formData.staffId,
+          staffName: businessStaff.find(s => s.id === formData.staffId)?.name,
+          serviceId: selectedServiceFromDB._id,
+          serviceName: selectedServiceFromDB.serviceName,
+          businessId: currentUser.businessId,
+          appointmentDate,
+          customerName: formData.customerName,
+        });
+        
+        // Create appointment in database
+        await createAppointmentMutation({
+          customerId: currentUser?.id as Id<"users"> | undefined,
+          employeeId: formData.staffId as Id<"staff">,
+          serviceId: selectedServiceFromDB._id,
+          businessId: currentUser.businessId,
+          appointmentDate,
+          appointmentStart: draftSlot.start.toISOString(),
+          appointmentEnd: endTime.toISOString(),
+          appointmentStatus: "confirmed",
+          dayOfWeek,
+          notes: "",
+          guestInfo: {
+            name: formData.customerName,
+            email: formData.customerEmail,
+            phone: formData.customerPhone,
+          },
+        });
 
-    // Automatically add new customer to list if not exists
-    // (check by phone number)
-    const existingCustomer = getCustomerByPhone(formData.customerPhone);
-    if (!existingCustomer) {
-      addCustomer(formData.customerName, formData.customerPhone);
+        // Automatically add new customer to list if not exists
+        // (check by phone number)
+        const existingCustomer = getCustomerByPhone(formData.customerPhone);
+        if (!existingCustomer) {
+          addCustomer(formData.customerName, formData.customerPhone);
+        }
+
+        showFeedback("Appointment created successfully!", "success");
+      }
+
+      // Show success message
+      setFormError(null);
+
+      // Close form after 500ms so user can see the message
+      setTimeout(() => {
+        closeForm();
+      }, 500);
+    } catch (error) {
+      console.error("Error saving appointment:", error);
+      const errorMsg = editingAppointmentId 
+        ? "Failed to update appointment. Please try again."
+        : "Failed to create appointment. Please try again.";
+      setFormError(errorMsg);
+      showFeedback(errorMsg, "error");
     }
+  };
 
-    // Add appointment to context and local state
-    addAppointment(newEvent);
-    setEvents((prev) => [...prev, newEvent]);
+  // Handler: Delete appointment
+  const handleDeleteAppointment = async () => {
+    if (!selectedEvent) return;
+    
+    // Confirm deletion
+    if (!window.confirm("Are you sure you want to delete this appointment?")) {
+      return;
+    }
+    
+    try {
+      // Delete from database
+      await deleteAppointmentMutation({ id: selectedEvent.id as Id<"appointments"> });
+      
+      // Remove from local state
+      setEvents((prev) => prev.filter((event) => event.id !== selectedEvent.id));
+      
+      // Show success message
+      showFeedback("Appointment deleted successfully!", "success");
+      
+      // Close modal
+      setSelectedEvent(null);
+    } catch (error) {
+      console.error("Error deleting appointment:", error);
+      showFeedback("Failed to delete appointment. Please try again.", "error");
+    }
+  };
 
-    // Show success message
-    setFormError(null);
-    showFeedback("Appointment created successfully!", "success");
-
-    // Close form after 500ms so user can see the message
-    setTimeout(() => {
-      closeForm();
-    }, 500);
+  // Handler: Edit appointment - populate form with existing data
+  const handleEditAppointment = () => {
+    if (!selectedEvent) return;
+    
+    // Calculate the actual duration from the appointment's start and end times
+    const durationMs = selectedEvent.end.getTime() - selectedEvent.start.getTime();
+    const duration = Math.round(durationMs / (60 * 1000)); // Convert to minutes
+    
+    // Populate form with existing appointment data
+    setFormData({
+      service: selectedEvent.service,
+      customerName: selectedEvent.customer.name,
+      customerEmail: selectedEvent.customer.email || "",
+      customerPhone: selectedEvent.customer.phone,
+      staffId: selectedEvent.staffId,
+      duration,
+    });
+    
+    // Set the time slot
+    setDraftSlot({
+      start: selectedEvent.start,
+      end: selectedEvent.end,
+    });
+    
+    // Set editing mode
+    setEditingAppointmentId(selectedEvent.id);
+    
+    // Close details modal and open form
+    setSelectedEvent(null);
+    setIsFormOpen(true);
   };
 
   // Helper: Create label to display on toolbar depending on view
@@ -867,12 +1129,12 @@ export default function BookingCalendar({
               eventPropGetter={(event) => ({
                 // Custom style for each event
                 style: {
-                  backgroundColor: serviceColorMap[event.service] ?? "#8ecae6",
+                  backgroundColor: serviceColorMapFromDB[event.service] ?? "#8ecae6",
                   border: "none",
                 },
               })}
               components={{
-                event: CustomEvent, // Custom component to display event
+                event: (props) => <CustomEvent {...props} colorMap={serviceColorMapFromDB} />, // Custom component to display event
                 toolbar: () => null, // Hide toolbar
               }}
               // Resources removed for single column day view
@@ -943,7 +1205,7 @@ export default function BookingCalendar({
                       </div>
                     </div>
 
-                    {/* 2-column grid: Staff and Location */}
+                    {/* 2-column grid: Staff and Business */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
                         <p className="text-xs font-semibold uppercase text-slate-500">
@@ -955,22 +1217,50 @@ export default function BookingCalendar({
                       </div>
                       <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
                         <p className="text-xs font-semibold uppercase text-slate-500">
-                          Location
+                          Business
                         </p>
                         <p className="text-sm font-medium text-slate-800">
-                          {selectedEvent.location}
+                          {businessName}
                         </p>
                       </div>
                     </div>
 
-                    {/* Phone number */}
-                    <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                      <p className="text-xs font-semibold uppercase text-slate-500">
-                        Phone
-                      </p>
-                      <p className="text-sm font-medium text-slate-800">
-                        {selectedEvent.customer.phone}
-                      </p>
+                    {/* 2-column grid: Phone and Email */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+                        <p className="text-xs font-semibold uppercase text-slate-500">
+                          Phone
+                        </p>
+                        <p className="text-sm font-medium text-slate-800">
+                          {selectedEvent.customer.phone || "N/A"}
+                        </p>
+                      </div>
+                      <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+                        <p className="text-xs font-semibold uppercase text-slate-500">
+                          Email
+                        </p>
+                        <p className="text-sm font-medium text-slate-800 break-all">
+                          {selectedEvent.customer.email || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Action buttons */}
+                    <div className="flex gap-3 pt-2">
+                      <button
+                          onClick={handleEditAppointment}
+                          className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/20 transition hover:bg-slate-800"
+                      >
+                        <Edit size={18} />
+                        Edit Appointment
+                      </button>
+                      <button
+                          onClick={handleDeleteAppointment}
+                          className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-red-600/20 transition hover:bg-red-700"
+                      >
+                        <Trash2 size={18} />
+                        Delete
+                      </button>
                     </div>
                   </div>
                 </motion.div>
@@ -994,7 +1284,7 @@ export default function BookingCalendar({
                   <div className="mb-6 flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-slate-900">
-                        New Appointment
+                        {editingAppointmentId ? "Edit Appointment" : "New Appointment"}
                       </h3>
                     </div>
                     {/* Close form button */}
@@ -1087,17 +1377,17 @@ export default function BookingCalendar({
                             onChange={(e) => {
                               // Find selected service
                               const selectedService =
-                                  serviceCatalog.find(
+                                  serviceCatalogFromDB.find(
                                       (svc) => svc.name === e.target.value
-                                  ) || serviceCatalog[0];
+                                  );
                               // Update service and duration
                               setFormData((prev) => ({
                                 ...prev,
                                 service: e.target.value,
-                                duration: selectedService.duration,
+                                duration: selectedService?.duration || 60,
                               }));
                               // Automatically update end time based on new duration
-                              if (draftSlot) {
+                              if (draftSlot && selectedService) {
                                 const newEndTime = new Date(
                                     draftSlot.start.getTime() +
                                     selectedService.duration * 60 * 1000
@@ -1105,14 +1395,24 @@ export default function BookingCalendar({
                                 setDraftSlot({ ...draftSlot, end: newEndTime });
                               }
                             }}
-                            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 focus:border-slate-400 focus:outline-none"
+                            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 focus:border-slate-400 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
+                            disabled={!hasServices}
                         >
-                          {serviceCatalog.map((svc) => (
+                          {hasServices ? (
+                            serviceCatalogFromDB.map((svc) => (
                               <option key={svc.name} value={svc.name}>
                                 {svc.name}
                               </option>
-                          ))}
+                            ))
+                          ) : (
+                            <option value="">No services available</option>
+                          )}
                         </select>
+                        {!hasServices && (
+                          <p className="text-xs text-amber-600">
+                            Please add services to your business first
+                          </p>
+                        )}
                       </div>
 
                       {/* Staff dropdown */}
@@ -1121,27 +1421,46 @@ export default function BookingCalendar({
                           Staff Member
                         </label>
                         <div className="relative">
-                          <select
-                              value={formData.staffId}
-                              onChange={(e) =>
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    staffId: e.target.value,
-                                  }))
-                              }
-                              className="w-full appearance-none rounded-lg border border-slate-200 px-3 py-2 pl-9 text-sm font-medium text-slate-800 focus:border-slate-400 focus:outline-none"
-                          >
-                            {businessStaff.map((member) => (
-                                <option key={member.id} value={member.id}>
-                                  {member.name}
-                                </option>
-                            ))}
-                          </select>
-                          {/* Scissors icon on the left */}
-                          <Scissors
-                              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                              size={16}
-                          />
+                          {isBusinessOwner ? (
+                            // Business owner can select from all staff
+                            <>
+                              <select
+                                  value={formData.staffId}
+                                  onChange={(e) =>
+                                      setFormData((prev) => ({
+                                        ...prev,
+                                        staffId: e.target.value,
+                                      }))
+                                  }
+                                  className="w-full appearance-none rounded-lg border border-slate-200 px-3 py-2 pl-9 text-sm font-medium text-slate-800 focus:border-slate-400 focus:outline-none"
+                              >
+                                {businessStaff.map((member) => (
+                                    <option key={member.id} value={member.id}>
+                                      {member.name}
+                                    </option>
+                                ))}
+                              </select>
+                              {/* Scissors icon on the left */}
+                              <Scissors
+                                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                  size={16}
+                              />
+                            </>
+                          ) : (
+                            // Staff member sees only their own name (read-only)
+                            <>
+                              <div className="relative w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 pl-9 text-sm font-medium text-slate-800">
+                                {businessStaff.find(s => s.id === formData.staffId)?.name || currentUser?.name || "N/A"}
+                                {/* Scissors icon on the left */}
+                                <Scissors
+                                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                    size={16}
+                                />
+                              </div>
+                              {/* Hidden input to maintain the staff ID */}
+                              <input type="hidden" value={formData.staffId} />
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1161,6 +1480,25 @@ export default function BookingCalendar({
                               }))
                           }
                           placeholder="Enter customer name"
+                          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 focus:border-slate-400 focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Customer email input */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-slate-500">
+                        Customer Email <span className="text-slate-400 font-normal">(optional)</span>
+                      </label>
+                      <input
+                          type="email"
+                          value={formData.customerEmail}
+                          onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                customerEmail: e.target.value,
+                              }))
+                          }
+                          placeholder="customer@example.com"
                           className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 focus:border-slate-400 focus:outline-none"
                       />
                     </div>
@@ -1254,7 +1592,7 @@ export default function BookingCalendar({
                             // If value < 15 or invalid -> revert to default duration
                             if (isNaN(value) || value < 15) {
                               const defaultDuration =
-                                  serviceCatalog.find(
+                                  serviceCatalogFromDB.find(
                                       (svc) => svc.name === formData.service
                                   )?.duration || 60;
                               const clampedDuration = Math.max(15, defaultDuration);
@@ -1306,7 +1644,7 @@ export default function BookingCalendar({
                       {/* Hint text displaying default duration of service */}
                       <p className="text-xs text-slate-400">
                         Default:{" "}
-                        {serviceCatalog.find((svc) => svc.name === formData.service)
+                        {serviceCatalogFromDB.find((svc) => svc.name === formData.service)
                             ?.duration ?? 60}{" "}
                         mins
                       </p>
@@ -1317,7 +1655,7 @@ export default function BookingCalendar({
                         type="submit"
                         className="mt-2 w-full rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/20 transition hover:bg-slate-800"
                     >
-                      Confirm Booking
+                      {editingAppointmentId ? "Update Appointment" : "Confirm Booking"}
                     </button>
                   </form>
                 </motion.div>

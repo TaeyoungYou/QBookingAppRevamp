@@ -234,9 +234,8 @@
   border-left: none;
 }
 
-/* Make events stand out more against stronger borders */
 .rbc-event {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
 }
 
 
@@ -249,11 +248,12 @@
 }
 
 .rbc-event {
-  padding: 6px 8px;
-  border-radius: 4px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
   cursor: pointer;
   transition: all 0.2s;
-  border-left: 3px solid rgba(255, 255, 255, 0.3);
+  background: transparent !important;
 }
 
 .rbc-event:hover {
@@ -263,10 +263,7 @@
 }
 
 .rbc-event-label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
+  display: none !important; /* Hide default time label to prevent duplicate */
 }
 
 .rbc-event-content {
