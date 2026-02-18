@@ -55,24 +55,7 @@ const BUSINESS_HOURS = { start: 9, end: 20 }; // Business hours: 9 AM - 8 PM
 const PRIMARY_LOCATION = "Polish Pro Studio"; // Primary location name
 
 // ===== SERVICE CATALOG =====
-// Catalog containing all services with their duration and colors
-const serviceCatalog = [
-  { name: "Blow Dry", duration: 60, color: "#8ecae6" }, // Blow dry - 60 minutes
-  { name: "Beard Grooming", duration: 60, color: "#f4a261" }, // Beard grooming - 60 minutes
-  { name: "Balinese Massage", duration: 75, color: "#7cd4c5" }, // Balinese massage - 75 minutes
-  { name: "Hair Colouring", duration: 60, color: "#f7aef8" }, // Hair coloring - 60 minutes
-  { name: "Manicure & Pedicure", duration: 60, color: "#ffcb77" }, // Manicure & Pedicure - 60 minutes
-];
-
-// Create a map object for easy access to colors by service name
-// Example: serviceColorMap["Blow Dry"] = "#8ecae6"
-const serviceColorMap = serviceCatalog.reduce<Record<string, string>>(
-    (acc, item) => {
-      acc[item.name] = item.color;
-      return acc;
-    },
-    {}
-);
+// Services will be loaded from database - no hardcoded catalog needed
 
 // ===== TYPE DEFINITIONS =====
 // Booking status types
@@ -102,59 +85,6 @@ interface BookingCalendarProps {
   selectedStaff: string[]; // List of selected staff for filtering
   selectedLocation: string; // Selected location for filtering
 }
-
-// ===== SAMPLE DATA =====
-// List of initial bookings (demo data)
-const initialEvents: BookingEvent[] = [
-  {
-    id: "evt-1",
-    title: "Blow Dry",
-    service: "Blow Dry",
-    staffId: "mary",
-    location: PRIMARY_LOCATION,
-    start: new Date(2025, 10, 13, 9, 0), // Nov 13, 2025, 9:00 AM
-    end: new Date(2025, 10, 13, 10, 0), // Nov 13, 2025, 10:00 AM
-    status: "confirmed",
-    customer: { name: "Brenda Massey", email: "brenda.massey@example.com", phone: "012-345-6789" },
-    resourceId: "mary",
-  },
-  {
-    id: "evt-2",
-    title: "Beard Grooming",
-    service: "Beard Grooming",
-    staffId: "john",
-    location: PRIMARY_LOCATION,
-    start: new Date(2025, 10, 13, 9, 0),
-    end: new Date(2025, 10, 13, 10, 0),
-    status: "confirmed",
-    customer: { name: "Zachary Kelley", email: "zachary.kelley@example.com", phone: "014-444-2288" },
-    resourceId: "john",
-  },
-  {
-    id: "evt-3",
-    title: "Balinese Massage",
-    service: "Balinese Massage",
-    staffId: "michael",
-    location: PRIMARY_LOCATION,
-    start: new Date(2025, 10, 13, 9, 45),
-    end: new Date(2025, 10, 13, 11, 0),
-    status: "confirmed",
-    customer: { name: "Diana Campos", email: "diana.campos@example.com", phone: "010-919-1212" },
-    resourceId: "michael",
-  },
-  {
-    id: "evt-4",
-    title: "Hair Colouring",
-    service: "Hair Colouring",
-    staffId: "mary",
-    location: PRIMARY_LOCATION,
-    start: new Date(2025, 10, 13, 11, 0),
-    end: new Date(2025, 10, 13, 12, 0),
-    status: "confirmed",
-    customer: { name: "Beverly Brown", email: "beverly.brown@example.com", phone: "010-222-3334" },
-    resourceId: "mary",
-  },
-];
 
 // ===== HELPER FUNCTIONS =====
 // Check if a date is a closed day
@@ -352,7 +282,7 @@ export default function BookingCalendar({
   const [date, setDate] = useState(new Date());
 
   // State managing list of all events/bookings
-  const [events, setEvents] = useState<BookingEvent[]>(initialEvents);
+  const [events, setEvents] = useState<BookingEvent[]>([]);
 
   // State managing currently selected event for viewing details
   const [selectedEvent, setSelectedEvent] = useState<BookingEvent | null>(null);
