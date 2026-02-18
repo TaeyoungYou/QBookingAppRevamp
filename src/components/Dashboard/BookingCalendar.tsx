@@ -159,13 +159,13 @@ const isClosedDay = (date: Date) => CLOSED_DAYS.includes(date.getDay());
 
 // ===== CUSTOM COMPONENTS =====
 // Component to display an event on the calendar
-const CustomEvent = ({ event }: { event: BookingEvent }) => {
+const CustomEvent = ({ event, colorMap }: { event: BookingEvent; colorMap: Record<string, string> }) => {
   return (
       <div
           className="h-full w-full rounded-md px-3 py-2 text-white shadow-sm"
           style={{
             // Use color corresponding to the service
-            backgroundColor: serviceColorMap[event.service] ?? "#8ecae6",
+            backgroundColor: colorMap[event.service] ?? "#8ecae6",
           }}
       >
         {/* Display time */}
@@ -240,9 +240,68 @@ export default function BookingCalendar({
     currentUser?.businessId ? { businessId: currentUser.businessId } : "skip"
   );
   
+  // Fetch current user's staff profile if they're an employee
+  const currentUserStaffProfile = useQuery(
+    api.functions.staffs.getStaffByEmail,
+    currentUser?.email && currentUser?.status === "employee" ? { email: currentUser.email } : "skip"
+  );
+  
+  // Fetch services from database by businessId
+  const dbServices = useQuery(
+    api.functions.services.getServicesByBusiness,
+    currentUser?.businessId ? { businessId: currentUser.businessId } : "skip"
+  );
+  
+  // Convert database services to service catalog format
+  const serviceCatalogFromDB = useMemo(() => {
+    if (!dbServices || dbServices.length === 0) return []; // Return empty array, no fallback
+    
+    return dbServices.map((service, index) => ({
+      name: service.serviceName,
+      duration: service.duration ? parseInt(service.duration) : 60, // Default to 60 minutes
+      color: palette[index % palette.length], // Assign colors cyclically
+    }));
+  }, [dbServices]);
+  
+  // Check if services are available from database
+  const hasServices = dbServices && dbServices.length > 0;
+  
+  // Create a map object for easy access to colors by service name from DB
+  const serviceColorMapFromDB = useMemo(() => {
+    return serviceCatalogFromDB.reduce<Record<string, string>>(
+      (acc, item) => {
+        acc[item.name] = item.color;
+        return acc;
+      },
+      {}
+    );
+  }, [serviceCatalogFromDB]);
+  
   // Convert database staff to StaffMember format
   const businessStaff: StaffMember[] = useMemo(() => {
-    if (!dbStaff) return staff; // Fallback to context staff if no data
+    // If user is an employee and staff list is empty or doesn't include them, create entry from currentUser
+    if (!isBusinessOwner && currentUser && currentUser.email) {
+      // Check if current user is in the staff list
+      const isInStaffList = dbStaff?.some(s => s.email === currentUser.email);
+      
+      if (!isInStaffList) {
+        // Create a staff member entry from the current user or their staff profile
+        const userStaffMember: StaffMember = {
+          id: String(currentUserStaffProfile?._id || currentUser.id || "temp-user-id"),
+          name: currentUserStaffProfile?.name || currentUser.name || "User",
+          role: currentUserStaffProfile?.role || "Staff",
+          avatar: currentUserStaffProfile?.image || "",
+          email: currentUser.email,
+          phone: currentUser.phone || "",
+          accentColor: palette[0],
+          status: "active",
+        };
+        return [userStaffMember];
+      }
+    }
+    
+    // For owners or when staff list exists
+    if (!dbStaff || dbStaff.length === 0) return staff; // Fallback to context staff if no data
     
     return dbStaff.map((s, index) => ({
       id: s._id,
@@ -254,7 +313,7 @@ export default function BookingCalendar({
       accentColor: palette[index % palette.length], // Assign colors cyclically
       status: (s.status as StaffStatus) || "active",
     }));
-  }, [dbStaff, staff]);
+  }, [dbStaff, staff, isBusinessOwner, currentUser, currentUserStaffProfile]);
   
   // Get business name from the current user's business
   const currentBusiness = getbusinesses?.find(
@@ -296,11 +355,11 @@ export default function BookingCalendar({
 
   // State managing booking form data
   const [formData, setFormData] = useState({
-    service: serviceCatalog[0].name, // Default service
+    service: "", // Will be set when services load
     customerName: "", // Customer name
     customerPhone: "", // Phone number
     staffId: businessStaff[0]?.id ?? "", // Staff member ID
-    duration: serviceCatalog[0].duration, // Service duration
+    duration: 60, // Default duration
   });
 
   // State filtering staff displayed in header
@@ -326,6 +385,18 @@ export default function BookingCalendar({
 
   // State managing date picker visibility
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  // ===== EFFECTS =====
+  // Update form data when services are loaded from database
+  useEffect(() => {
+    if (serviceCatalogFromDB.length > 0) {
+      setFormData(prev => ({
+        ...prev,
+        service: prev.service || serviceCatalogFromDB[0].name,
+        duration: prev.service ? prev.duration : serviceCatalogFromDB[0].duration,
+      }));
+    }
+  }, [serviceCatalogFromDB]);
 
   // ===== COMPUTED VALUES =====
   // Calculate list of staff to display based on filter and user role
@@ -482,8 +553,8 @@ export default function BookingCalendar({
 
         // Use the dragged duration, or fall back to service default if drag was too short
         const selectedService =
-            serviceCatalog.find((svc) => svc.name === formData.service) ||
-            serviceCatalog[0];
+            serviceCatalogFromDB.find((svc) => svc.name === formData.service) ||
+            serviceCatalogFromDB[0];
         const actualDuration =
             draggedDurationMinutes >= 15
                 ? draggedDurationMinutes
@@ -494,7 +565,7 @@ export default function BookingCalendar({
         setFormData((prev) => ({
           ...prev,
           staffId,
-          service: prev.service || serviceCatalog[0].name,
+          service: prev.service || serviceCatalogFromDB[0]?.name || "",
           duration: actualDuration,
         }));
         setIsFormOpen(true);
@@ -510,7 +581,7 @@ export default function BookingCalendar({
 
     // Get default duration of service
     const defaultDuration =
-        serviceCatalog.find((svc) => svc.name === formData.service)?.duration ||
+        serviceCatalogFromDB.find((svc) => svc.name === formData.service)?.duration ||
         60;
     const end = new Date(start.getTime() + defaultDuration * 60 * 1000);
 
@@ -535,11 +606,11 @@ export default function BookingCalendar({
     setFormError(null);
     // Reset form to default values
     setFormData({
-      service: serviceCatalog[0].name,
+      service: serviceCatalogFromDB[0]?.name || "",
       customerName: "",
       customerPhone: "",
       staffId: businessStaff[0]?.id ?? "",
-      duration: serviceCatalog[0].duration,
+      duration: serviceCatalogFromDB[0]?.duration || 60,
     });
   };
 
@@ -867,12 +938,12 @@ export default function BookingCalendar({
               eventPropGetter={(event) => ({
                 // Custom style for each event
                 style: {
-                  backgroundColor: serviceColorMap[event.service] ?? "#8ecae6",
+                  backgroundColor: serviceColorMapFromDB[event.service] ?? "#8ecae6",
                   border: "none",
                 },
               })}
               components={{
-                event: CustomEvent, // Custom component to display event
+                event: (props) => <CustomEvent {...props} colorMap={serviceColorMapFromDB} />, // Custom component to display event
                 toolbar: () => null, // Hide toolbar
               }}
               // Resources removed for single column day view
@@ -1087,17 +1158,17 @@ export default function BookingCalendar({
                             onChange={(e) => {
                               // Find selected service
                               const selectedService =
-                                  serviceCatalog.find(
+                                  serviceCatalogFromDB.find(
                                       (svc) => svc.name === e.target.value
-                                  ) || serviceCatalog[0];
+                                  );
                               // Update service and duration
                               setFormData((prev) => ({
                                 ...prev,
                                 service: e.target.value,
-                                duration: selectedService.duration,
+                                duration: selectedService?.duration || 60,
                               }));
                               // Automatically update end time based on new duration
-                              if (draftSlot) {
+                              if (draftSlot && selectedService) {
                                 const newEndTime = new Date(
                                     draftSlot.start.getTime() +
                                     selectedService.duration * 60 * 1000
@@ -1105,14 +1176,24 @@ export default function BookingCalendar({
                                 setDraftSlot({ ...draftSlot, end: newEndTime });
                               }
                             }}
-                            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 focus:border-slate-400 focus:outline-none"
+                            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 focus:border-slate-400 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
+                            disabled={!hasServices}
                         >
-                          {serviceCatalog.map((svc) => (
+                          {hasServices ? (
+                            serviceCatalogFromDB.map((svc) => (
                               <option key={svc.name} value={svc.name}>
                                 {svc.name}
                               </option>
-                          ))}
+                            ))
+                          ) : (
+                            <option value="">No services available</option>
+                          )}
                         </select>
+                        {!hasServices && (
+                          <p className="text-xs text-amber-600">
+                            Please add services to your business first
+                          </p>
+                        )}
                       </div>
 
                       {/* Staff dropdown */}
@@ -1121,27 +1202,42 @@ export default function BookingCalendar({
                           Staff Member
                         </label>
                         <div className="relative">
-                          <select
-                              value={formData.staffId}
-                              onChange={(e) =>
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    staffId: e.target.value,
-                                  }))
-                              }
-                              className="w-full appearance-none rounded-lg border border-slate-200 px-3 py-2 pl-9 text-sm font-medium text-slate-800 focus:border-slate-400 focus:outline-none"
-                          >
-                            {businessStaff.map((member) => (
-                                <option key={member.id} value={member.id}>
-                                  {member.name}
-                                </option>
-                            ))}
-                          </select>
-                          {/* Scissors icon on the left */}
-                          <Scissors
-                              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                              size={16}
-                          />
+                          {isBusinessOwner ? (
+                            // Business owner can select from all staff
+                            <>
+                              <select
+                                  value={formData.staffId}
+                                  onChange={(e) =>
+                                      setFormData((prev) => ({
+                                        ...prev,
+                                        staffId: e.target.value,
+                                      }))
+                                  }
+                                  className="w-full appearance-none rounded-lg border border-slate-200 px-3 py-2 pl-9 text-sm font-medium text-slate-800 focus:border-slate-400 focus:outline-none"
+                              >
+                                {businessStaff.map((member) => (
+                                    <option key={member.id} value={member.id}>
+                                      {member.name}
+                                    </option>
+                                ))}
+                              </select>
+                              {/* Scissors icon on the left */}
+                              <Scissors
+                                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                  size={16}
+                              />
+                            </>
+                          ) : (
+                            // Staff member sees only their own name (read-only)
+                            <div className="relative w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 pl-9 text-sm font-medium text-slate-800">
+                              {currentUser?.name || businessStaff[0]?.name || "N/A"}
+                              {/* Scissors icon on the left */}
+                              <Scissors
+                                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                  size={16}
+                              />
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1254,7 +1350,7 @@ export default function BookingCalendar({
                             // If value < 15 or invalid -> revert to default duration
                             if (isNaN(value) || value < 15) {
                               const defaultDuration =
-                                  serviceCatalog.find(
+                                  serviceCatalogFromDB.find(
                                       (svc) => svc.name === formData.service
                                   )?.duration || 60;
                               const clampedDuration = Math.max(15, defaultDuration);
@@ -1306,7 +1402,7 @@ export default function BookingCalendar({
                       {/* Hint text displaying default duration of service */}
                       <p className="text-xs text-slate-400">
                         Default:{" "}
-                        {serviceCatalog.find((svc) => svc.name === formData.service)
+                        {serviceCatalogFromDB.find((svc) => svc.name === formData.service)
                             ?.duration ?? 60}{" "}
                         mins
                       </p>
