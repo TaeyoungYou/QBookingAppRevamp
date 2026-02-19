@@ -12,9 +12,8 @@ import {
 } from "lucide-react";
 import logo from "../../assets/logo.png";
 // import { useUser } from "../../context/UserContext";
-import {useQuery} from "convex/react";
-import {api} from "../../../convex/_generated/api";
-
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 
 const menuItems = [
   {
@@ -72,13 +71,11 @@ export default function Sidebar({ isOpen }: SidebarProps) {
   const location = useLocation();
   const user = useQuery(api.functions.users.getCurrentUser);
 
-  const filteredMenuItems = menuItems.filter(
-    (item) => {
-      if (item.adminOnly && user?.status !== "owner") return false;
-      if (item.ownerHidden && user?.status === "owner") return false;
-      return true;
-    }
-  );
+  const filteredMenuItems = menuItems.filter((item) => {
+    if (item.adminOnly && user?.status !== "owner") return false;
+    if (item.ownerHidden && user?.status === "owner") return false;
+    return true;
+  });
 
   return (
     <motion.aside
@@ -94,11 +91,13 @@ export default function Sidebar({ isOpen }: SidebarProps) {
         transition={{ delay: 0.2, duration: 0.5 }}
         className="h-16 flex items-center px-6 border-b border-blueGreen bg-white/80 backdrop-blur-sm"
       >
-        <img
-          src={logo}
-          alt="Logo"
-          className="h-9 w-auto rounded-lg shadow-lg"
-        />
+        <Link to="/">
+          <img
+            src={logo}
+            alt="Logo"
+            className="h-9 w-auto rounded-lg shadow-lg"
+          />
+        </Link>
       </motion.div>
 
       {/* Navigation */}
