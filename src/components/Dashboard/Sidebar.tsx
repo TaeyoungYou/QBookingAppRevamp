@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import { useMemo } from "react";
 import { motion } from "motion/react";
 import {
   Calendar,
@@ -71,18 +72,22 @@ export default function Sidebar({ isOpen }: SidebarProps) {
   const location = useLocation();
   const user = useQuery(api.functions.users.getCurrentUser);
 
-  const filteredMenuItems = menuItems.filter((item) => {
-    if (item.adminOnly && user?.status !== "owner") return false;
-    if (item.ownerHidden && user?.status === "owner") return false;
-    return true;
-  });
+  const filteredMenuItems = useMemo(
+    () =>
+      menuItems.filter((item) => {
+        if (item.adminOnly && user?.status !== "owner") return false;
+        if (item.ownerHidden && user?.status === "owner") return false;
+        return true;
+      }),
+    [user?.status],
+  );
 
   return (
     <motion.aside
       initial={{ x: -280 }}
       animate={{ x: isOpen ? 0 : -280 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="w-64 bg-linear-to-b from-gray-100 via-gray-100 to-skyBlue text-prussianBlue flex flex-col h-screen shadow-xl fixed z-1010 border-r border-blueGreen"
+      className="w-64 bg-gradient-to-b from-gray-100 via-gray-100 to-skyBlue text-prussianBlue flex flex-col h-screen shadow-xl fixed z-1010 border-r border-blueGreen"
     >
       {/* Logo  */}
       <motion.div
@@ -119,8 +124,8 @@ export default function Sidebar({ isOpen }: SidebarProps) {
                   to={item.path}
                   className={`flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden ${
                     isActive
-                      ? "bg-linear-to-r from-blueGreen to-skyBlue text-white shadow-lg shadow-blueGreen/30 border border-blueGreen"
-                      : "text-prussianBlue hover:bg-white/80 hover:text-BlueGreen border border-transparent"
+                      ? "bg-gradient-to-r from-blueGreen to-skyBlue text-white shadow-lg shadow-blueGreen/30 border border-blueGreen"
+                      : "text-prussianBlue hover:bg-white/80 hover:text-blueGreen border border-transparent"
                   }`}
                 >
                   <div className="flex items-center gap-3 z-10">
@@ -144,7 +149,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
                   />
                   {/* Hover effect background */}
                   {!isActive && (
-                    <div className="absolute inset-0 bg-linear-to-r from-blueGreen/0 to-skyBlue/10 -translate-x-full group-hover:translate-x-0 transition-transform duration-300" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-blueGreen/0 to-skyBlue/10 -translate-x-full group-hover:translate-x-0 transition-transform duration-300" />
                   )}
                 </Link>
               </motion.div>
@@ -164,7 +169,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
           <motion.div
             whileHover={{ scale: 1.1, rotate: 5 }}
             transition={{ type: "spring", stiffness: 300 }}
-            className="w-11 h-11 bg-linear-to-r from-blueGreen to-skyBlue rounded-full flex items-center justify-center text-white font-bold shadow-lg shadow-blueGreen/30"
+            className="w-11 h-11 bg-gradient-to-r from-blueGreen to-skyBlue rounded-full flex items-center justify-center text-white font-bold shadow-lg shadow-blueGreen/30"
           >
             {user?.name
               ?.split(" ")
@@ -174,7 +179,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
               .toUpperCase() || "U"}
           </motion.div>
           <div className="flex-1">
-            <p className="text-sm font-bold text-prussianBlue group-hover:text-BlueGreen transition-colors">
+            <p className="text-sm font-bold text-prussianBlue group-hover:text-blueGreen transition-colors">
               {user?.name || "User"}
             </p>
             <p className="text-xs text-prussianBlue/70">

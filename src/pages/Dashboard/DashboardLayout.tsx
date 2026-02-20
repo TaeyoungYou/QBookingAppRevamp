@@ -20,30 +20,30 @@ export default function DashboardLayout() {
 
   return (
     <UserProvider>
-    <StaffProvider>
+      <StaffProvider>
         <AppointmentsProvider>
           <CustomersProvider>
-      <div className="h-screen bg-linear-to-br from-[#f0f8fb] via-[#fef9f3] to-[#f5f5f0] flex overflow-hidden">
-        {isSidebarOpen && (
-          <div
-            className="fixed inset-0 bg-prussianBlue/20 backdrop-blur-sm z-40 lg:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          />
-        )}
+            <div className="h-screen bg-gradient-to-br from-[#f0f8fb] via-[#fef9f3] to-[#f5f5f0] flex overflow-hidden">
+              {isSidebarOpen && (
+                <div
+                  className="fixed inset-0 bg-prussianBlue/20 backdrop-blur-sm z-40 lg:hidden"
+                  onClick={() => setIsSidebarOpen(false)}
+                />
+              )}
 
-        <Sidebar isOpen={isSidebarOpen} onToggle={handleToggleSidebar} />
+              <Sidebar isOpen={isSidebarOpen} onToggle={handleToggleSidebar} />
 
-        <div
-          className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${
-            isSidebarOpen ? "lg:ml-64" : "lg:ml-0"
-          }`}
-        >
-          <Outlet context={{ isSidebarOpen, setIsSidebarOpen }} />
-        </div>
-      </div>
+              <div
+                className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${
+                  isSidebarOpen ? "lg:ml-64" : "lg:ml-0"
+                }`}
+              >
+                <Outlet context={{ isSidebarOpen, setIsSidebarOpen }} />
+              </div>
+            </div>
           </CustomersProvider>
         </AppointmentsProvider>
-    </StaffProvider>
+      </StaffProvider>
     </UserProvider>
   );
 }
