@@ -42,15 +42,18 @@ const Header = () => {
 
   // Prevent body scroll when sidebar is open
   useEffect(() => {
+    document.body.style.overflowX = "hidden";
+
     const isDesktop = window.matchMedia("(min-width: 768px)").matches;
     if (isDesktop) {
-      document.body.style.overflow = "unset";
+      document.body.style.overflowY = "unset";
     } else {
-      document.body.style.overflow = isSidebarOpen ? "hidden" : "unset";
+      document.body.style.overflowY = isSidebarOpen ? "hidden" : "unset";
     }
 
     return () => {
-      document.body.style.overflow = "unset";
+      document.body.style.overflowX = "unset";
+      document.body.style.overflowY = "unset";
     };
   }, [isSidebarOpen]);
 
@@ -58,9 +61,9 @@ const Header = () => {
     const mq = window.matchMedia("(min-width: 768px)");
     const handleChange = () => {
       if (mq.matches) {
-        document.body.style.overflow = "unset";
+        document.body.style.overflowY = "unset";
       } else {
-        document.body.style.overflow = isSidebarOpen ? "hidden" : "unset";
+        document.body.style.overflowY = isSidebarOpen ? "hidden" : "unset";
       }
     };
     handleChange();
